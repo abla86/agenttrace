@@ -1,5 +1,6 @@
-﻿from dataclasses import dataclass, field
+from dataclasses import dataclass, field
 from enum import Enum
+import hashlib
 from typing import Any, Dict, List, Optional, Tuple
 
 
@@ -34,6 +35,14 @@ class TraceNode:
     taint: TaintLabel
     content: str
     parent_ids: Tuple[str, ...] = ()
+
+    @property
+    def node_hash(self) -> str:
+        canonical = (
+            f"{self.node_id}|{self.taint.value}|{self.content}|"
+            f"{','.join(sorted(self.parent_ids))}"
+        )
+        return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 @dataclass(frozen=True)
