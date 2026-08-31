@@ -30,7 +30,6 @@ __all__ = [
     "ControllerStep",
     "DefenseEngine",
     "DefenseProposal",
-    "DefenseEngine",
     "DriftEngine",
     "DriftState",
     "EnrichedProposal",
