@@ -1,0 +1,6 @@
+{
+  "name": "WPWW WarRoom - Elite Defense & Honeypot",
+  "description": "Autonomt cybersikkerhets- og honeypot-system med Gudemodus (God Mode), Pokémon-stil Cyber Gladiator virus-kamparena med etterkampsrapporter, 'Hvorfor dette er i en helt egen klasse'-dossier, 13 inkluderte forsvarsmoduler, 60-minutters Recharts tidsserie, 4-lags kryptering (AES-256-GCM / Kyber-1024), og uforanderlig WORM-kjede.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
