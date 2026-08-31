@@ -20,6 +20,7 @@ export interface UnifiedRendererDependencies {
   lighting?: RenderPass;
   ssr?: RenderPass;
   fog?: RenderPass;
+  path?: RenderPass;
   particles?: RenderPass;
   postProcessing?: RenderPass;
 }
@@ -54,6 +55,7 @@ export class UnifiedRendererPipeline {
     this.passes.lighting?.render(context);
     this.passes.ssr?.render(context);
     this.passes.fog?.render(context);
+    this.passes.path?.render(context);
     this.passes.particles?.render(context);
     this.passes.postProcessing?.render(context);
   }
