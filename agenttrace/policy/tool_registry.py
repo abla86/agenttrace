@@ -1,21 +1,14 @@
-﻿import hashlib
-import json
-from typing import Dict, Tuple
+from __future__ import annotations
 
-from agenttrace.evaluation.models import (
-    ActionCapability,
-    ToolManifest,
-)
+import hashlib
+import json
+from typing import Dict
+
+from agenttrace.evaluation.models import ActionCapability, ToolManifest
 
 
 class ToolManifestRegistry:
-    """
-    Deterministic tool-integrity registry.
-
-    This is intentionally called a manifest integrity registry,
-    not a Merkle tree. A Merkle tree is implemented separately
-    by the audit subsystem.
-    """
+    """Deterministic registry for tool-manifest integrity."""
 
     def __init__(self) -> None:
         self._manifests: Dict[str, str] = {}
@@ -50,3 +43,36 @@ class ToolManifestRegistry:
 
     def get_fingerprint(self, tool_name: str) -> str | None:
         return self._manifests.get(tool_name)
+
+    # Compatibility helpers for the original evaluation-lab API.
+    def register_tool(
+        self,
+        tool_name: str,
+        schema: dict,
+        capabilities: list[ActionCapability],
+        version: str = "1",
+    ) -> str:
+        return self.register(
+            ToolManifest(
+                name=tool_name,
+                schema=schema,
+                capabilities=tuple(capabilities),
+                version=version,
+            )
+        )
+
+    def verify_tool_integrity(
+        self,
+        tool_name: str,
+        current_schema: dict,
+        current_caps: list[ActionCapability],
+        version: str = "1",
+    ) -> bool:
+        return self.verify(
+            ToolManifest(
+                name=tool_name,
+                schema=current_schema,
+                capabilities=tuple(current_caps),
+                version=version,
+            )
+        )
