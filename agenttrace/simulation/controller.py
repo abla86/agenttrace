@@ -9,7 +9,7 @@ from .policy import SimulationPolicy
 from .proposal_runtime import ProposalDecision, ProposalRuntime
 from .state import SimulationState, build_simulation_state
 from .swarm import SwarmEngine
-from .swarm.Territory import CivilizationRuntime
+from .swarm_entities import SwarmWorldEngine
 
 
 @dataclass(frozen=True)
@@ -29,7 +29,7 @@ class SimulationController:
         self.proposals = ProposalRuntime(self.autonomy)
         self.policy = SimulationPolicy()
         self.swarm = SwarmEngine(seed=seed)
-        self.civilization = CivilizationRuntime(seed=seed)
+        self.world = SwarmWorldEngine(seed=seed)
         self.drift = DriftState(0, 0, 0, 0, 0, 0, "STABLE")
 
     def _snapshot(self) -> ControllerStep:
@@ -54,7 +54,8 @@ class SimulationController:
             self.drift.defense_load,
             self.drift.infection_rate,
         )
-        self.civilization.tick(
+
+        self.world.tick(
             self.arena.worms.worms,
             self.drift.score,
             self.drift.defense_load,
