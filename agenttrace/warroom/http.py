@@ -9,8 +9,9 @@ from starlette.routing import Route, WebSocketRoute
 from .api import WarRoomRuntime, get_runtime
 from .dashboard import build_dashboard_payload
 from .events import event_stream
-from .presentation import _view_from_dict
+from .live_scene import build_live_scene
 from .metrics import build_visualization_payload
+from .presentation import _view_from_dict
 
 
 def _runtime(request) -> WarRoomRuntime:
@@ -21,6 +22,7 @@ def _dashboard_payload(raw: dict[str, Any]) -> dict[str, Any]:
     view = _view_from_dict(raw)
     payload = build_dashboard_payload(view)
     payload["visualizations"] = build_visualization_payload(view)
+    payload["live_scene"] = build_live_scene(view)
     payload["tick"] = view.tick
     payload["arena"] = view.arena
     payload["drift_state"] = view.drift
