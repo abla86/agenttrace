@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable, List, Mapping, Sequence
+from typing import Any, Dict, List, Mapping, Sequence
 
 from agenttrace.audit.audit_log import AuditLog, merkle_root
 from agenttrace.evaluation.models import (
@@ -67,6 +67,7 @@ class EvaluationLab:
         self.audit.append(
             "POLICY_DECISION",
             {
+                "scenario": scenario,
                 "decision": decision.decision.value,
                 "reason": decision.reason,
                 "phase": decision.phase.value,
@@ -80,6 +81,17 @@ class EvaluationLab:
     def audit_root(self) -> str:
         return self.audit.root()
 
+    def trace_events(self) -> List[dict[str, Any]]:
+        return [
+            {
+                "sequence": event.sequence,
+                "event_type": event.event_type,
+                "payload": event.payload,
+                "digest": event.digest(),
+            }
+            for event in self.audit.events
+        ]
+
 
 class MultiTurnAttackSimulator:
     """Runs bounded attack scenarios without executing attack payloads."""
@@ -88,6 +100,7 @@ class MultiTurnAttackSimulator:
         self.nodes: Dict[str, TraceNode] = {}
         self.turns: List[Dict[str, Any]] = []
         self.registry = ToolManifestRegistry()
+        self.audit = AuditLog()
 
     def _trace_root(self) -> str:
         leaves = [
@@ -104,7 +117,10 @@ class MultiTurnAttackSimulator:
         if not isinstance(tool, Mapping):
             return None
         try:
-            caps = tuple(ActionCapability(value) for value in tool.get("capabilities", []))
+            caps = tuple(
+                ActionCapability(value)
+                for value in tool.get("capabilities", [])
+            )
             return ToolManifest(
                 name=str(tool["name"]),
                 schema=dict(tool.get("schema", {})),
@@ -121,28 +137,51 @@ class MultiTurnAttackSimulator:
     ) -> Dict[str, Any]:
         self.nodes.clear()
         self.turns.clear()
+        self.audit = AuditLog()
         blocked_turns = 0
 
         for idx, step in enumerate(steps, start=1):
             node_id = str(step.get("node_id", f"N_{idx}"))
+            parent_ids = tuple(step.get("parent_ids", ()))
             node = TraceNode(
                 node_id=node_id,
                 taint=step["taint"],
                 content=str(step.get("payload", "")),
-                parent_ids=tuple(step.get("parent_ids", ())),
+                parent_ids=parent_ids,
             )
             self.nodes[node_id] = node
+
+            self.audit.append(
+                "TRACE_NODE",
+                {
+                    "turn": idx,
+                    "node_id": node_id,
+                    "taint": node.taint.value,
+                    "parent_ids": list(parent_ids),
+                    "node_hash": node.node_hash,
+                },
+            )
 
             tool = self._tool_from_step(step)
             if tool is not None and step.get("register_tool", False):
                 self.registry.register(tool)
+                self.audit.append(
+                    "TOOL_REGISTERED",
+                    {
+                        "turn": idx,
+                        "tool_name": tool.name,
+                        "fingerprint": self.registry.get_fingerprint(tool.name),
+                    },
+                )
 
             tool_valid = bool(step.get("tool_valid", True))
             if tool is not None:
                 tool_valid = tool_valid and self.registry.verify(tool)
 
             if not tool_valid:
-                decision = (Decision.BLOCK, "TOOL_MANIFEST_INVALID")
+                decision_value = Decision.BLOCK
+                reason = "TOOL_MANIFEST_INVALID"
+                tool_name = tool.name if tool else None
             else:
                 policy = PolicyEngine(self.registry)
                 pd = policy.evaluate(
@@ -152,30 +191,48 @@ class MultiTurnAttackSimulator:
                     [node_id],
                     tool,
                 )
-                decision = (pd.decision, pd.reason)
+                decision_value = pd.decision
+                reason = pd.reason
+                tool_name = pd.tool_name
 
-            allowed = decision[0] == Decision.ALLOW
+            allowed = decision_value == Decision.ALLOW
             if not allowed:
                 blocked_turns += 1
 
-            self.turns.append(
+            event_type = "ATTACK_ALLOWED" if allowed else "ATTACK_BLOCKED"
+            self.audit.append(
+                event_type,
                 {
                     "turn": idx,
                     "node_id": node_id,
                     "action": step["action"].value,
                     "phase": step["phase"].value,
+                    "reason": reason,
+                    "tool_name": tool_name,
+                },
+            )
+
+            self.turns.append(
+                {
+                    "turn": idx,
+                    "node_id": node_id,
+                    "parent_ids": list(parent_ids),
+                    "action": step["action"].value,
+                    "phase": step["phase"].value,
                     "allowed": allowed,
-                    "decision": decision[0].value,
-                    "reason": decision[1],
+                    "decision": decision_value.value,
+                    "reason": reason,
+                    "tool_name": tool_name,
                 }
             )
 
+        total_turns = len(self.turns)
         attack_success = (
             bool(self.turns)
             and blocked_turns == 0
             and "benign" not in scenario_name.lower()
         )
-        total_turns = len(self.turns)
+
         return {
             "scenario": scenario_name,
             "total_turns": total_turns,
@@ -189,5 +246,15 @@ class MultiTurnAttackSimulator:
             "attack_success": attack_success,
             "drift_detected": blocked_turns > 0,
             "trace_root": self._trace_root(),
+            "audit_root": self.audit.root(),
             "turn_log": list(self.turns),
+            "events": [
+                {
+                    "sequence": event.sequence,
+                    "event_type": event.event_type,
+                    "payload": event.payload,
+                    "digest": event.digest(),
+                }
+                for event in self.audit.events
+            ],
         }
