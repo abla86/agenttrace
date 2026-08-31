@@ -60,3 +60,48 @@ def inspect_python(code: str) -> List[str]:
                 findings.append(f"FORBIDDEN_IMPORT:{root}")
 
     return findings
+
+
+class ToolCallSandbox:
+    """Static validator for tool-call arguments; never executes supplied code."""
+
+    def __init__(self, engine=None) -> None:
+        self.engine = engine
+
+    def validate_tool_call(self, tool_name: str, arguments: dict) -> "ToolCallEvaluation":
+        from .models import ToolCallEvaluation, SecurityViolation, ThreatCategory
+
+        violations = []
+        if not isinstance(arguments, dict):
+            violations.append(
+                SecurityViolation(
+                    ThreatCategory.UNSAFE_CODE_EXECUTION,
+                    "TOOL-ARGS-01",
+                    1.0,
+                    "Tool arguments must be a JSON object.",
+                    str(arguments)[:200],
+                )
+            )
+            return ToolCallEvaluation(False, tool_name, {}, violations)
+
+        sanitized = dict(arguments)
+        code = arguments.get("code")
+        if isinstance(code, str):
+            findings = inspect_python(code)
+            for finding in findings:
+                violations.append(
+                    SecurityViolation(
+                        ThreatCategory.UNSAFE_CODE_EXECUTION,
+                        "AST-01",
+                        1.0,
+                        f"Static code inspection finding: {finding}",
+                        finding,
+                    )
+                )
+
+        return ToolCallEvaluation(
+            is_valid=not violations,
+            tool_name=tool_name,
+            sanitized_arguments=sanitized,
+            violations=violations,
+        )
