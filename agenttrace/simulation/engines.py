@@ -60,10 +60,10 @@ class WormEngine:
             worm.x += dx
             worm.y += dy
             worm.energy = max(0.0, worm.energy - 1.0)
-            events.append(SimulationEvent(len(events) + 1, "WORM_MOVED", worm.id, details={"x": worm.x, "y": worm.y}))
+            events.append(SimulationEvent(0, "WORM_MOVED", worm.id, details={"x": worm.x, "y": worm.y}))
             if self.rng.next() < 0.25:
                 self.worms[self.worms.index(worm)] = self.mutations.mutate(worm, self.rng)
-                events.append(SimulationEvent(len(events) + 1, "WORM_MUTATED", worm.id))
+                events.append(SimulationEvent(0, "WORM_MUTATED", worm.id))
         return events
 
 
@@ -81,7 +81,7 @@ class DefenseEngine:
         self.walls.append(wall)
         return wall
 
-    def apply(self, worms: list[WormState], sequence_start: int = 0) -> list[SimulationEvent]:
+    def apply(self, worms: list[WormState]) -> list[SimulationEvent]:
         events: list[SimulationEvent] = []
         for worm in worms:
             for wall in self.walls:
@@ -89,11 +89,11 @@ class DefenseEngine:
                     continue
                 if wall.kind == "firewall":
                     worm.energy = max(0.0, worm.energy - 5.0 * wall.strength)
-                    events.append(SimulationEvent(sequence_start + len(events) + 1, "DEFENSE_TRIGGERED", worm.id, wall.id))
+                    events.append(SimulationEvent(0, "DEFENSE_TRIGGERED", worm.id, wall.id))
                 else:
                     worm.energy = 0.0
                     worm.health = max(0.0, worm.health - 10.0 * wall.strength)
-                    events.append(SimulationEvent(sequence_start + len(events) + 1, "DEFENSE_TRAP_TRIGGERED", worm.id, wall.id))
+                    events.append(SimulationEvent(0, "DEFENSE_TRAP_TRIGGERED", worm.id, wall.id))
         return events
 
 
@@ -101,7 +101,7 @@ class InfectionEngine:
     def __init__(self, rng: DeterministicRng | None = None) -> None:
         self.rng = rng or DeterministicRng()
 
-    def tick(self, worms: list[WormState], sequence_start: int = 0) -> list[SimulationEvent]:
+    def tick(self, worms: list[WormState]) -> list[SimulationEvent]:
         events: list[SimulationEvent] = []
         for i, source in enumerate(worms):
             for target in worms[i + 1:]:
@@ -111,7 +111,7 @@ class InfectionEngine:
                     continue
                 target.mutations = [*target.mutations, *source.mutations[:2]]
                 target.mutation_level = min(1.0, target.mutation_level + 0.05)
-                events.append(SimulationEvent(sequence_start + len(events) + 1, "PROPAGATION_SIMULATED", source.id, target.id))
+                events.append(SimulationEvent(0, "PROPAGATION_SIMULATED", source.id, target.id))
         return events
 
 
@@ -126,12 +126,8 @@ class ArenaEngine:
 
     def tick(self) -> list[SimulationEvent]:
         emitted = self.worms.tick()
-        self.sequence += len(emitted)
-        emitted.extend(self.defense.apply(self.worms.worms, self.sequence))
-        self.sequence += len(emitted) - (self.sequence - len(emitted)) if emitted else 0
-        propagation = self.infection.tick(self.worms.worms, self.sequence)
-        self.sequence += len(propagation)
-        emitted.extend(propagation)
+        emitted.extend(self.defense.apply(self.worms.worms))
+        emitted.extend(self.infection.tick(self.worms.worms))
         normalized: list[SimulationEvent] = []
         for event in emitted:
             self.sequence += 1
