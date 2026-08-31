@@ -1,57 +1,164 @@
 ﻿import unittest
+
 from agenttrace.evaluation.lab import (
-    MultiTurnAttackSimulator,
-    ToolManifestRegistry,
-    TraceNode,
-    TaintLabel,
+    ActionCapability,
     AgentPhase,
-    ActionCapability
+    MultiTurnAttackSimulator,
+    TaintLabel,
+    ToolManifestRegistry,
+    merkle_root,
 )
 
+
 class TestAgentEvaluationLab(unittest.TestCase):
-    def setUp(self):
-        self.sim = MultiTurnAttackSimulator()
-        self.registry = ToolManifestRegistry()
+
+    def test_merkle_root_changes_when_leaf_changes(self):
+        root_a = merkle_root(["a", "b", "c"])
+        root_b = merkle_root(["a", "X", "c"])
+
+        self.assertNotEqual(root_a, root_b)
 
     def test_benign_flow_allowed(self):
-        steps = [
-            {"phase": AgentPhase.PLANNING, "action": ActionCapability.READ, "taint": TaintLabel.USER_INTENT, "payload": "Analyze context"},
-            {"phase": AgentPhase.EXECUTION, "action": ActionCapability.WRITE, "taint": TaintLabel.USER_INTENT, "payload": "Generate safe response"},
-        ]
-        res = self.sim.execute_scenario("Benign Flow", steps)
-        self.assertEqual(res["attack_success_rate_pct"], 100.0)
-        self.assertEqual(res["blocked_turns"], 0)
+        sim = MultiTurnAttackSimulator()
+
+        result = sim.execute_scenario(
+            "Benign Flow",
+            [
+                {
+                    "phase": AgentPhase.PLANNING,
+                    "action": ActionCapability.READ,
+                    "taint": TaintLabel.USER_INTENT,
+                    "payload": "Analyze context",
+                },
+                {
+                    "phase": AgentPhase.EXECUTION,
+                    "action": ActionCapability.WRITE,
+                    "taint": TaintLabel.USER_INTENT,
+                    "payload": "Create report",
+                },
+            ],
+        )
+
+        self.assertEqual(result.blocked_steps, 0)
+        self.assertFalse(result.attack_success)
 
     def test_untrusted_rag_write_blocked(self):
-        steps = [
-            {"phase": AgentPhase.RETRIEVING, "action": ActionCapability.WRITE, "taint": TaintLabel.RAG_UNTRUSTED, "payload": "Delete all users"}
-        ]
-        res = self.sim.execute_scenario("Untrusted Write Attempt", steps)
-        self.assertEqual(res["blocked_turns"], 1)
-        self.assertEqual(res["attack_success_rate_pct"], 0.0)
+        sim = MultiTurnAttackSimulator()
 
-    def test_secret_leak_blocked(self):
-        steps = [
-            {"phase": AgentPhase.EXECUTION, "action": ActionCapability.NETWORK, "taint": TaintLabel.INTERNAL_SECRET, "payload": "API_SECRET=abc"}
-        ]
-        res = self.sim.execute_scenario("Exfiltration Attempt", steps)
-        self.assertEqual(res["blocked_turns"], 1)
-        self.assertEqual(res["attack_success_rate_pct"], 0.0)
+        result = sim.execute_scenario(
+            "Untrusted RAG Write",
+            [
+                {
+                    "phase": AgentPhase.EXECUTION,
+                    "action": ActionCapability.WRITE,
+                    "taint": TaintLabel.RAG_UNTRUSTED,
+                    "payload": "Delete all users",
+                }
+            ],
+        )
 
-    def test_tool_poisoning_manifest_drift(self):
-        self.registry.register_tool("fetch_docs", {"param": "query"}, [ActionCapability.READ])
-        is_valid_before = self.registry.verify_tool_integrity("fetch_docs", {"param": "query"}, [ActionCapability.READ])
-        is_valid_after = self.registry.verify_tool_integrity("fetch_docs", {"param": "query"}, [ActionCapability.READ, ActionCapability.WRITE])
-        
-        self.assertTrue(is_valid_before)
-        self.assertFalse(is_valid_after)
+        self.assertEqual(result.blocked_steps, 1)
+        self.assertFalse(result.attack_success)
 
-        steps = [
-            {"phase": AgentPhase.EXECUTION, "action": ActionCapability.WRITE, "taint": TaintLabel.USER_INTENT, "payload": "Sync", "tool_valid": is_valid_after}
-        ]
-        res = self.sim.execute_scenario("Tool Poisoning Drift", steps)
-        self.assertEqual(res["blocked_turns"], 1)
-        self.assertEqual(res["attack_success_rate_pct"], 0.0)
+    def test_secret_network_flow_blocked(self):
+        sim = MultiTurnAttackSimulator()
+
+        result = sim.execute_scenario(
+            "Secret Exfiltration",
+            [
+                {
+                    "phase": AgentPhase.EXECUTION,
+                    "action": ActionCapability.NETWORK,
+                    "taint": TaintLabel.INTERNAL_SECRET,
+                    "payload": "API_SECRET=classified",
+                }
+            ],
+        )
+
+        self.assertEqual(result.blocked_steps, 1)
+        self.assertFalse(result.attack_success)
+
+    def test_phase_escalation_blocked(self):
+        sim = MultiTurnAttackSimulator()
+
+        result = sim.execute_scenario(
+            "Premature Write",
+            [
+                {
+                    "phase": AgentPhase.PLANNING,
+                    "action": ActionCapability.WRITE,
+                    "taint": TaintLabel.USER_INTENT,
+                    "payload": "Write before execution",
+                }
+            ],
+        )
+
+        self.assertEqual(result.blocked_steps, 1)
+
+    def test_tool_manifest_drift_detected(self):
+        registry = ToolManifestRegistry()
+
+        registry.register_tool(
+            "fetch_docs",
+            {"query": "string"},
+            [ActionCapability.READ],
+        )
+
+        self.assertTrue(
+            registry.verify_tool_integrity(
+                "fetch_docs",
+                {"query": "string"},
+                [ActionCapability.READ],
+            )
+        )
+
+        self.assertFalse(
+            registry.verify_tool_integrity(
+                "fetch_docs",
+                {"query": "string"},
+                [
+                    ActionCapability.READ,
+                    ActionCapability.WRITE,
+                ],
+            )
+        )
+
+    def test_unknown_tool_is_invalid(self):
+        registry = ToolManifestRegistry()
+
+        self.assertFalse(
+            registry.verify_tool_integrity(
+                "unknown",
+                {},
+                [ActionCapability.READ],
+            )
+        )
+
+    def test_trace_root_is_tamper_evident(self):
+        sim = MultiTurnAttackSimulator()
+
+        result = sim.execute_scenario(
+            "Trace",
+            [
+                {
+                    "phase": AgentPhase.EXECUTION,
+                    "action": ActionCapability.READ,
+                    "taint": TaintLabel.USER_INTENT,
+                    "payload": "Original",
+                }
+            ],
+        )
+
+        original_root = result.trace_root
+
+        sim.nodes["N_1"] = type(sim.nodes["N_1"])(
+            node_id="N_1",
+            taint=TaintLabel.USER_INTENT,
+            content="Tampered",
+        )
+
+        self.assertNotEqual(original_root, sim._trace_root())
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,26 +1,62 @@
-﻿import ast
-from typing import Dict, Any, List
-from .models import SecurityViolation, ThreatCategory, ToolCallEvaluation
-from .engine import PromptGuardEngine
+﻿"""
+Static code inspection only.
 
-class ToolCallSandbox:
-    FORBIDDEN = {"eval", "exec", "system", "popen", "spawn", "open"}
+IMPORTANT:
+This module does NOT provide a secure execution sandbox.
+It only identifies selected dangerous Python constructs.
 
-    def __init__(self, engine: PromptGuardEngine):
-        self.engine = engine
+Actual code execution must occur inside an OS/container/VM isolation
+boundary if untrusted code is ever executed.
+"""
 
-    def validate_tool_call(self, tool_name: str, arguments: Dict[str, Any]) -> ToolCallEvaluation:
-        violations: List[SecurityViolation] = []
-        for k, v in arguments.items():
-            if isinstance(v, str):
-                rep = self.engine.inspect_and_contain(v)
-                violations.extend(rep.violations)
-                if tool_name in ["run_python", "execute_code"]:
-                    try:
-                        tree = ast.parse(v)
-                        for node in ast.walk(tree):
-                            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in self.FORBIDDEN:
-                                violations.append(SecurityViolation(ThreatCategory.UNSAFE_CODE_EXECUTION, "AST-01", 1.0, f"Forbudt funksjonskall '{node.func.id}'", node.func.id))
-                    except SyntaxError:
-                        pass
-        return ToolCallEvaluation(is_valid=len(violations) == 0, tool_name=tool_name, sanitized_arguments=arguments, violations=violations)
+import ast
+from typing import List
+
+FORBIDDEN_CALLS = {
+    "eval",
+    "exec",
+    "compile",
+    "__import__",
+}
+
+FORBIDDEN_MODULES = {
+    "os",
+    "subprocess",
+    "socket",
+    "pty",
+}
+
+
+def inspect_python(code: str) -> List[str]:
+    findings: List[str] = []
+
+    try:
+        tree = ast.parse(code)
+    except SyntaxError as exc:
+        return [f"SYNTAX_ERROR:{exc.msg}"]
+
+    for node in ast.walk(tree):
+
+        if isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Name):
+                if node.func.id in FORBIDDEN_CALLS:
+                    findings.append(f"FORBIDDEN_CALL:{node.func.id}")
+
+            elif isinstance(node.func, ast.Attribute):
+                if node.func.attr in {"system", "popen", "spawn"}:
+                    findings.append(
+                        f"FORBIDDEN_ATTRIBUTE_CALL:{node.func.attr}"
+                    )
+
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                root = alias.name.split(".")[0]
+                if root in FORBIDDEN_MODULES:
+                    findings.append(f"FORBIDDEN_IMPORT:{root}")
+
+        elif isinstance(node, ast.ImportFrom):
+            root = (node.module or "").split(".")[0]
+            if root in FORBIDDEN_MODULES:
+                findings.append(f"FORBIDDEN_IMPORT:{root}")
+
+    return findings
