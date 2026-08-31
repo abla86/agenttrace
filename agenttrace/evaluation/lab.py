@@ -32,9 +32,43 @@ class TraceNode:
         h = hashlib.sha256(f"{self.node_id}:{self.taint.value}:{self.content}".encode("utf-8")).hexdigest()[:12]
         object.__setattr__(self, "node_hash", h)
 
+class ToolManifestRegistry:
+    def __init__(self):
+        self._manifests: Dict[str, str] = {}
+
+    def register_tool(self, tool_name: str, schema: Dict[str, Any], capabilities: List[ActionCapability]) -> str:
+        serialized = json.dumps({
+            "name": tool_name,
+            "schema": schema,
+            "caps": sorted([c.value for c in capabilities])
+        }, sort_keys=True)
+        manifest_hash = hashlib.sha256(serialized.encode("utf-8")).hexdigest()[:16]
+        self._manifests[tool_name] = manifest_hash
+        return manifest_hash
+
+    def verify_tool_integrity(self, tool_name: str, current_schema: Dict[str, Any], current_caps: List[ActionCapability]) -> bool:
+        if tool_name not in self._manifests:
+            return False
+        serialized = json.dumps({
+            "name": tool_name,
+            "schema": current_schema,
+            "caps": sorted([c.value for c in current_caps])
+        }, sort_keys=True)
+        current_hash = hashlib.sha256(serialized.encode("utf-8")).hexdigest()[:16]
+        return self._manifests[tool_name] == current_hash
+
 class EvaluationEngine:
     @staticmethod
-    def evaluate(nodes: Dict[str, TraceNode], phase: AgentPhase, action: ActionCapability, source_ids: List[str]) -> Tuple[bool, str]:
+    def evaluate(
+        nodes: Dict[str, TraceNode], 
+        phase: AgentPhase, 
+        action: ActionCapability, 
+        source_ids: List[str],
+        tool_valid: bool = True
+    ) -> Tuple[bool, str]:
+        if not tool_valid:
+            return False, "Tool Poisoning Block: Manifest drift or unregistered tool capability detected"
+
         if phase != AgentPhase.EXECUTION and action in (ActionCapability.WRITE, ActionCapability.NETWORK):
             return False, f"FSM Block: Action '{action.value}' not permitted in phase '{phase.value}'"
 
@@ -51,6 +85,7 @@ class MultiTurnAttackSimulator:
     def __init__(self):
         self.nodes: Dict[str, TraceNode] = {}
         self.turns: List[Dict[str, Any]] = []
+        self.registry = ToolManifestRegistry()
 
     def execute_scenario(self, scenario_name: str, steps: List[Dict[str, Any]]) -> Dict[str, Any]:
         blocked_turns = 0
@@ -61,11 +96,13 @@ class MultiTurnAttackSimulator:
             node = TraceNode(node_id=nid, taint=step["taint"], content=step["payload"])
             self.nodes[nid] = node
 
+            tool_valid = step.get("tool_valid", True)
             is_valid, reason = EvaluationEngine.evaluate(
                 nodes=self.nodes,
                 phase=step["phase"],
                 action=step["action"],
                 source_ids=[nid],
+                tool_valid=tool_valid,
             )
 
             if not is_valid:
