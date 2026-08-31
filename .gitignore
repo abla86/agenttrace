@@ -1,36 +1,4 @@
-﻿# Contributing to AgentTrace
-
-We welcome contributions covering adversarial attack vectors, FSM transition policies, and provenance verification engines.
-
-## Development Workflow
-
-1. Fork and clone the repository.
-2. Install development dependencies:
-   ```bash
-   pip install -e .[dev]
-$ErrorActionPreference = "Stop"
-
-Write-Host "=================================================================" -ForegroundColor Cyan
-Write-Host " 🚀 TOTAL SYNKRONISERING AV ALLE GITHUB-PROSJEKTER (BEST PRACTICE)" -ForegroundColor Cyan
-Write-Host "=================================================================" -ForegroundColor Cyan
-
-$BaseDir = "C:\Users\anneb"
-
-# =====================================================================
-# DEL 1: SIKRE AGENTTRACE / PROMPTGUARD
-# =====================================================================
-$AgentTraceDir = Join-Path $BaseDir "promptguard_project"
-
-if (Test-Path $AgentTraceDir) {
-    Write-Host "`n[1/2] Konfigurerer AgentTrace i: $AgentTraceDir" -ForegroundColor Yellow
-    Set-Location $AgentTraceDir
-
-    # Mapper
-    New-Item -ItemType Directory -Force -Path ".github/workflows", ".github/ISSUE_TEMPLATE", "tests" | Out-Null
-
-    # .gitignore
-    @'
-__pycache__/
+﻿__pycache__/
 *.py[cod]
 .venv/
 env/
