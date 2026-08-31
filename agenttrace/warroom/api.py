@@ -14,6 +14,7 @@ class WarRoomRuntime:
 
     def __init__(self, seed: int = 1) -> None:
         self._lock = Lock()
+        self._seed = seed
         self.controller = SimulationController(seed=seed)
         self._last_step = self.controller.tick()
 
@@ -26,18 +27,16 @@ class WarRoomRuntime:
             self._last_step = self.controller.tick()
             return asdict(build_warroom_view(self._last_step))
 
-    def reset(self, seed: int = 1) -> dict[str, Any]:
+    def reset(self, seed: int | None = None) -> dict[str, Any]:
         with self._lock:
-            self.controller = SimulationController(seed=seed)
+            self._seed = self._seed if seed is None else seed
+            self.controller = SimulationController(seed=self._seed)
             self._last_step = self.controller.tick()
             return asdict(build_warroom_view(self._last_step))
 
     def proposals(self) -> tuple[dict[str, Any], ...]:
         with self._lock:
-            return tuple(
-                asdict(decision.proposal)
-                for decision in self._last_step.proposals
-            )
+            return tuple(asdict(decision.proposal) for decision in self._last_step.proposals)
 
     def events(self) -> tuple[dict[str, Any], ...]:
         with self._lock:
@@ -55,13 +54,17 @@ class WarRoomRuntime:
             )
             if proposal is None:
                 raise KeyError(proposal_id)
+
             promoted = self.controller.promote(proposal)
-            self._last_step = self.controller.tick()
+            self._last_step = self._snapshot_from_controller()
             return {
                 "promoted": True,
                 "proposal_id": promoted.proposal_id,
                 "state": asdict(build_warroom_view(self._last_step)),
             }
+
+    def _snapshot_from_controller(self):
+        return self.controller.tick_without_advance()
 
 
 _RUNTIME = WarRoomRuntime()
