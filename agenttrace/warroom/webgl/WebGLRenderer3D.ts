@@ -1,3 +1,5 @@
+import { Camera3D, Vec3 as CameraVec3 } from "./Camera3D";
+
 export type Vec3 = [number, number, number];
 
 export interface RenderEntity3D {
@@ -83,23 +85,8 @@ function createProgram(gl: WebGL2RenderingContext): WebGLProgram {
   return program;
 }
 
-function orthographic(
-  left: number,
-  right: number,
-  bottom: number,
-  top: number,
-  near: number,
-  far: number,
-): Float32Array {
-  return new Float32Array([
-    2 / (right - left), 0, 0, 0,
-    0, 2 / (top - bottom), 0, 0,
-    0, 0, -2 / (far - near), 0,
-    -(right + left) / (right - left),
-    -(top + bottom) / (top - bottom),
-    -(far + near) / (far - near),
-    1,
-  ]);
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
 }
 
 export function projectRenderEntity(
@@ -110,9 +97,9 @@ export function projectRenderEntity(
   const x = Number(entity.x ?? 0);
   const y = Number(entity.y ?? 0);
   const radius = Number(entity.radius ?? 4);
-  const stealth = Math.max(0, Math.min(1, Number(entity.stealth ?? 0)));
+  const stealth = clamp(Number(entity.stealth ?? 0), 0, 1);
   const speed = Math.max(0, Number(entity.speed ?? 0));
-  const aggression = Math.max(0, Math.min(1, Number(entity.aggression ?? speed / 2)));
+  const aggression = clamp(Number(entity.aggression ?? speed / 2), 0, 1);
 
   return {
     id: String(entity.id ?? "unknown"),
@@ -120,7 +107,7 @@ export function projectRenderEntity(
     pos: [x - width / 2, height / 2 - y, aggression * 2 - 1],
     size: Math.max(2, radius * 2),
     color: [aggression, 1 - stealth, stealth],
-    opacity: Math.max(0.05, Math.min(1, Number(entity.opacity ?? 1))),
+    opacity: clamp(Number(entity.opacity ?? 1), 0.05, 1),
   };
 }
 
@@ -135,11 +122,17 @@ export class WebGLRenderer3D {
   private readonly projectionLocation: WebGLUniformLocation;
   private readonly viewLocation: WebGLUniformLocation;
 
-  constructor(private readonly canvas: HTMLCanvasElement) {
+  private readonly camera: Camera3D;
+
+  constructor(
+    private readonly canvas: HTMLCanvasElement,
+    camera = new Camera3D(),
+  ) {
     const gl = canvas.getContext("webgl2", { antialias: true, alpha: true });
     if (!gl) throw new Error("WebGL2 is not supported");
 
     this.gl = gl;
+    this.camera = camera;
     this.program = createProgram(gl);
 
     const vao = gl.createVertexArray();
@@ -185,6 +178,12 @@ export class WebGLRenderer3D {
 
   render(entities: RenderEntity3D[]): void {
     const gl = this.gl;
+    const width = Math.max(1, this.canvas.clientWidth || this.canvas.width);
+    const height = Math.max(1, this.canvas.clientHeight || this.canvas.height);
+
+    if (this.canvas.width !== width) this.canvas.width = width;
+    if (this.canvas.height !== height) this.canvas.height = height;
+
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     gl.clearColor(0.02, 0.02, 0.06, 1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -202,25 +201,19 @@ export class WebGLRenderer3D {
     this.upload(this.sizeBuffer, sizes);
     this.upload(this.opacityBuffer, opacities);
 
-    const projection = orthographic(
-      -this.canvas.width / 2,
-      this.canvas.width / 2,
-      -this.canvas.height / 2,
-      this.canvas.height / 2,
-      -100,
-      100,
-    );
-    const view = new Float32Array([
-      1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0,
-      0, 0, 0, 1,
-    ]);
+    const aspect = this.canvas.width / this.canvas.height;
+    const projection = this.camera.getProjectionMatrix(aspect);
+    const view = this.camera.getViewMatrix();
 
     gl.uniformMatrix4fv(this.projectionLocation, false, projection);
     gl.uniformMatrix4fv(this.viewLocation, false, view);
+
     gl.drawArrays(gl.POINTS, 0, entities.length);
     gl.bindVertexArray(null);
+  }
+
+  getCamera(): Camera3D {
+    return this.camera;
   }
 
   dispose(): void {
