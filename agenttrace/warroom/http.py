@@ -4,9 +4,10 @@ from typing import Any
 
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
-from starlette.routing import Route
+from starlette.routing import Route, WebSocketRoute
 
 from .api import WarRoomRuntime, get_runtime
+from .events import event_stream
 
 
 def _runtime(request) -> WarRoomRuntime:
@@ -53,6 +54,7 @@ routes = [
     Route("/simulation/tick", tick_endpoint, methods=["POST"]),
     Route("/simulation/reset", reset_endpoint, methods=["POST"]),
     Route("/simulation/proposal/promote", promote_endpoint, methods=["POST"]),
+    WebSocketRoute("/simulation/stream", event_stream),
 ]
 
 app = Starlette(routes=routes)
