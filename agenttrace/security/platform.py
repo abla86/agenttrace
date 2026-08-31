@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import OrderedDict
 from dataclasses import dataclass
 from enum import Enum
 import hashlib
@@ -63,19 +64,38 @@ class LockdownController:
 
 
 class ReplayGuard:
-    def __init__(self, ttl_seconds: float = 30.0) -> None:
+    def __init__(self, ttl_seconds: float = 30.0, max_entries: int = 10_000) -> None:
+        if ttl_seconds <= 0:
+            raise ValueError("ttl_seconds_must_be_positive")
+        if max_entries <= 0:
+            raise ValueError("max_entries_must_be_positive")
         self.ttl_seconds = ttl_seconds
-        self._seen: dict[str, float] = {}
+        self.max_entries = max_entries
+        self._seen: OrderedDict[str, float] = OrderedDict()
 
     def accept(self, request_id: str) -> bool:
+        if not request_id:
+            return False
+
         now = time.time()
         stale = [key for key, ts in self._seen.items() if now - ts > self.ttl_seconds]
         for key in stale:
             self._seen.pop(key, None)
+
         if request_id in self._seen:
             return False
+
         self._seen[request_id] = now
+        self._seen.move_to_end(request_id)
+
+        while len(self._seen) > self.max_entries:
+            self._seen.popitem(last=False)
+
         return True
+
+    @property
+    def size(self) -> int:
+        return len(self._seen)
 
 
 def canonical_request(parts: Iterable[str]) -> str:
@@ -126,6 +146,6 @@ def health(controller: LockdownController, replay_guard: ReplayGuard, mode: Plat
         status=status,
         lockdown=controller.locked,
         mode=mode,
-        replay_cache_size=len(replay_guard._seen),
+        replay_cache_size=replay_guard.size,
         internal_secret_configured=configured,
     )
