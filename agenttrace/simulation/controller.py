@@ -28,17 +28,25 @@ class SimulationController:
         self.policy = SimulationPolicy()
         self.drift = DriftState(0, 0, 0, 0, 0, 0, "STABLE")
 
-    def tick(self) -> ControllerStep:
-        self.arena.tick()
-        self.drift = self.drift_engine.update(self.arena.worms.worms, self.arena.events)
+    def _snapshot(self) -> ControllerStep:
         state = build_simulation_state(self.arena, self.drift)
         decisions = self.proposals.evaluate(state, self.policy.validate)
         return ControllerStep(state, self.drift, tuple(decisions))
 
+    def tick(self) -> ControllerStep:
+        self.arena.set_drift_score(self.drift.score)
+        self.arena.tick()
+        self.drift = self.drift_engine.update(
+            self.arena.worms.worms,
+            self.arena.events,
+            defense_count=len(self.arena.defense.walls),
+            autonomy_level=self.drift.autonomy_level,
+        )
+        return self._snapshot()
+
     def snapshot(self) -> ControllerStep:
         """Return the current controller state without advancing the simulation."""
-        state = build_simulation_state(self.arena, self.drift)
-        return ControllerStep(state, self.drift, ())
+        return self._snapshot()
 
     def promote(self, proposal: DefenseProposal) -> DefenseProposal:
         validated = self.autonomy.validate(proposal, self.policy.validate)
