@@ -37,7 +37,6 @@ class ProposalRuntime:
         if proposal is None:
             return []
 
-        enriched = self.proposals.create(state, proposal)
         validated = self.autonomy.validate(proposal, policy)
         enriched = self.proposals.create(state, validated)
         return [
