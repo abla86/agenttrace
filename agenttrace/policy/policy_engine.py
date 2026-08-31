@@ -1,4 +1,4 @@
-﻿from typing import Dict, Iterable, Tuple
+from typing import Dict, Iterable
 
 from agenttrace.evaluation.models import (
     ActionCapability,
@@ -13,8 +13,7 @@ from agenttrace.policy.tool_registry import ToolManifestRegistry
 
 
 class PolicyEngine:
-
-    WRITE_CAPABLE = {
+    PRIVILEGED = {
         ActionCapability.WRITE,
         ActionCapability.NETWORK,
     }
@@ -30,20 +29,30 @@ class PolicyEngine:
         source_ids: Iterable[str],
         tool: ToolManifest | None = None,
     ) -> PolicyDecision:
-
         sources = tuple(source_ids)
 
-        if tool is not None and not self.registry.verify(tool):
-            return PolicyDecision(
-                Decision.BLOCK,
-                "TOOL_MANIFEST_INVALID",
-                phase,
-                action,
-                sources,
-                tool.name,
-            )
+        if tool is not None:
+            if not self.registry.verify(tool):
+                return PolicyDecision(
+                    Decision.BLOCK,
+                    "TOOL_MANIFEST_INVALID",
+                    phase,
+                    action,
+                    sources,
+                    tool.name,
+                )
 
-        if phase != AgentPhase.EXECUTION and action in self.WRITE_CAPABLE:
+            if action not in set(tool.capabilities):
+                return PolicyDecision(
+                    Decision.BLOCK,
+                    "TOOL_CAPABILITY_NOT_GRANTED",
+                    phase,
+                    action,
+                    sources,
+                    tool.name,
+                )
+
+        if phase != AgentPhase.EXECUTION and action in self.PRIVILEGED:
             return PolicyDecision(
                 Decision.BLOCK,
                 "PHASE_CAPABILITY_DENIED",
@@ -55,7 +64,6 @@ class PolicyEngine:
 
         for source_id in sources:
             node = nodes.get(source_id)
-
             if node is None:
                 return PolicyDecision(
                     Decision.BLOCK,
@@ -67,11 +75,9 @@ class PolicyEngine:
                 )
 
             if (
-                node.taint in {
-                    TaintLabel.RAG_UNTRUSTED,
-                    TaintLabel.TOOL_OUTPUT_UNTRUSTED,
-                }
-                and action in self.WRITE_CAPABLE
+                node.taint
+                in {TaintLabel.RAG_UNTRUSTED, TaintLabel.TOOL_OUTPUT_UNTRUSTED}
+                and action in self.PRIVILEGED
             ):
                 return PolicyDecision(
                     Decision.BLOCK,
