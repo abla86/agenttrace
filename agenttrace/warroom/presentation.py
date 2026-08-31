@@ -3,7 +3,9 @@ from __future__ import annotations
 from dataclasses import asdict
 from typing import Any
 
+from .agents import build_agent_grid
 from .api import WarRoomRuntime, get_runtime
+from .incidents import build_incident_timeline
 from .inspector import build_inspector
 from .view_model import WarRoomViewModel
 
@@ -17,6 +19,7 @@ def build_warroom_presentation(
     if selection is not None:
         inspector = build_inspector(view, selection[0], selection[1])
 
+    events = list(view.recent_events)
     return {
         "tick": view.tick,
         "arena": view.arena,
@@ -24,12 +27,15 @@ def build_warroom_presentation(
         "worms": list(view.worms),
         "defenses": list(view.defenses),
         "proposals": list(view.proposals),
-        "events": list(view.recent_events),
+        "events": events,
+        "incidents": build_incident_timeline(events),
+        "agents": build_agent_grid(view, events),
         "inspector": inspector,
         "overlays": {
             "selection": inspector["cell"] if inspector else None,
             "proposal_count": len(view.proposals),
-            "event_count": len(view.recent_events),
+            "event_count": len(events),
+            "incident_count": len(build_incident_timeline(events)),
         },
     }
 
@@ -39,13 +45,9 @@ def presentation_for_runtime(
     selection: tuple[float, float] | None = None,
 ) -> dict[str, Any]:
     runtime = runtime or get_runtime()
-    view = runtime.state()
-    return {
-        **view,
-        "inspector": build_inspector(_view_from_dict(view), selection[0], selection[1])
-        if selection is not None
-        else None,
-    }
+    payload = runtime.state()
+    view = _view_from_dict(payload)
+    return build_warroom_presentation(view, selection)
 
 
 def _view_from_dict(payload: dict[str, Any]) -> WarRoomViewModel:
