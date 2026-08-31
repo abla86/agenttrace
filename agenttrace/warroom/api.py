@@ -56,15 +56,12 @@ class WarRoomRuntime:
                 raise KeyError(proposal_id)
 
             promoted = self.controller.promote(proposal)
-            self._last_step = self._snapshot_from_controller()
+            self._last_step = self.controller.snapshot()
             return {
                 "promoted": True,
                 "proposal_id": promoted.proposal_id,
                 "state": asdict(build_warroom_view(self._last_step)),
             }
-
-    def _snapshot_from_controller(self):
-        return self.controller.tick_without_advance()
 
 
 _RUNTIME = WarRoomRuntime()
