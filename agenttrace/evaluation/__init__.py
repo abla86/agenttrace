@@ -1,2 +1,1 @@
-﻿from .models import *
-from .policy import *
+from .models import *
