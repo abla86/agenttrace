@@ -35,16 +35,20 @@ class SimulationController:
         decisions = self.proposals.evaluate(state, self.policy.validate)
         return ControllerStep(state, self.drift, tuple(decisions))
 
+    def snapshot(self) -> ControllerStep:
+        """Return the current controller state without advancing the simulation."""
+        state = build_simulation_state(self.arena, self.drift)
+        return ControllerStep(state, self.drift, ())
+
     def promote(self, proposal: DefenseProposal) -> DefenseProposal:
         validated = self.autonomy.validate(proposal, self.policy.validate)
-        return self.autonomy.promote(validated, lambda item: self._apply_promoted(item))
+        return self.autonomy.promote(validated, self._apply_promoted)
 
     def _apply_promoted(self, proposal: DefenseProposal) -> None:
         if proposal.action == "increase_simulation_defense_coverage":
             delta = proposal.parameters.get("coverage_delta", 0.0)
             if not self.policy.validate_coverage_delta(delta):
                 raise PermissionError("Coverage delta exceeds simulation policy")
-            # Promotion changes only simulation state. It does not mutate AgentTrace security policy.
             if self.arena.worms.worms:
                 anchor = self.arena.worms.worms[0]
                 self.arena.defense.add_firewall(anchor.x, anchor.y, strength=1.0 + delta)
