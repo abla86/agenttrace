@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import sqlite3
 import time
-from dataclasses import asdict
 from typing import Any, Dict, List
 
 from starlette.applications import Starlette
@@ -39,10 +38,20 @@ class SQLiteTraceStore:
                     action TEXT NOT NULL,
                     allowed INTEGER NOT NULL,
                     reason TEXT NOT NULL,
-                    content_hash TEXT NOT NULL
+                    content_hash TEXT NOT NULL,
+                    tool_name TEXT,
+                    tool_fingerprint TEXT
                 )
                 """
             )
+            columns = {
+                row[1]
+                for row in conn.execute("PRAGMA table_info(audit_events)").fetchall()
+            }
+            if "tool_name" not in columns:
+                conn.execute("ALTER TABLE audit_events ADD COLUMN tool_name TEXT")
+            if "tool_fingerprint" not in columns:
+                conn.execute("ALTER TABLE audit_events ADD COLUMN tool_fingerprint TEXT")
             conn.commit()
 
     def log_event(
@@ -52,13 +61,16 @@ class SQLiteTraceStore:
         action: ActionCapability,
         allowed: bool,
         reason: str,
+        tool_name: str | None = None,
+        tool_fingerprint: str | None = None,
     ) -> None:
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(
                 """
                 INSERT INTO audit_events
-                (timestamp,node_id,taint,phase,action,allowed,reason,content_hash)
-                VALUES (?,?,?,?,?,?,?,?)
+                (timestamp,node_id,taint,phase,action,allowed,reason,content_hash,
+                 tool_name,tool_fingerprint)
+                VALUES (?,?,?,?,?,?,?,?,?,?)
                 """,
                 (
                     time.time(),
@@ -69,6 +81,8 @@ class SQLiteTraceStore:
                     int(allowed),
                     reason,
                     node.node_hash,
+                    tool_name,
+                    tool_fingerprint,
                 ),
             )
             conn.commit()
@@ -105,7 +119,13 @@ async def register_tool(request):
         manifest = _parse_manifest(body)
         fingerprint = registry.register(manifest)
         return JSONResponse(
-            {"registered": True, "tool": manifest.name, "fingerprint": fingerprint}
+            {
+                "registered": True,
+                "tool": manifest.name,
+                "fingerprint": fingerprint,
+                "capabilities": [c.value for c in manifest.capabilities],
+                "version": manifest.version,
+            }
         )
     except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
         return JSONResponse({"error": str(exc)}, status_code=400)
@@ -120,21 +140,54 @@ async def intercept_tool_call(request):
         action = ActionCapability(body.get("action", ActionCapability.READ.value))
         content = str(body.get("content", ""))
         tool_name = body.get("tool_name")
+        parent_ids = tuple(str(x) for x in body.get("parent_ids", []))
 
-        node = TraceNode(node_id=node_id, taint=taint, content=content)
+        node = TraceNode(
+            node_id=node_id,
+            taint=taint,
+            content=content,
+            parent_ids=parent_ids,
+        )
         nodes_state[node_id] = node
 
-        tool = None
+        tool: ToolManifest | None = None
+        tool_fingerprint: str | None = None
         if tool_name:
             tool = ToolManifest(
                 name=str(tool_name),
                 schema=dict(body.get("schema", {})),
                 capabilities=tuple(
                     ActionCapability(value)
-                    for value in body.get("capabilities", [action.value])
+                    for value in body.get("capabilities", [])
                 ),
                 version=str(body.get("version", "1")),
             )
+            tool_fingerprint = registry.get_fingerprint(tool.name)
+
+            # An intercepted call may only use a tool that is already registered.
+            # The client cannot self-register a privileged manifest in the same call.
+            if tool_fingerprint is None:
+                reason = "TOOL_NOT_REGISTERED"
+                store.log_event(
+                    node,
+                    phase,
+                    action,
+                    False,
+                    reason,
+                    tool.name,
+                    None,
+                )
+                return JSONResponse(
+                    {
+                        "allowed": False,
+                        "decision": "BLOCK",
+                        "reason": reason,
+                        "node_hash": node.node_hash,
+                        "tool_name": tool.name,
+                        "timestamp": time.time(),
+                    },
+                    status_code=403,
+                )
 
         decision = PolicyEngine(registry).evaluate(
             nodes_state,
@@ -143,21 +196,27 @@ async def intercept_tool_call(request):
             [node_id],
             tool,
         )
+
+        allowed = decision.decision.value == "ALLOW"
         store.log_event(
             node,
             phase,
             action,
-            decision.decision.value == "ALLOW",
+            allowed,
             decision.reason,
+            decision.tool_name,
+            tool_fingerprint,
         )
 
         return JSONResponse(
             {
-                "allowed": decision.decision.value == "ALLOW",
+                "allowed": allowed,
                 "decision": decision.decision.value,
                 "reason": decision.reason,
                 "node_hash": node.node_hash,
+                "parent_ids": list(parent_ids),
                 "tool_name": decision.tool_name,
+                "tool_fingerprint": tool_fingerprint,
                 "timestamp": time.time(),
             }
         )
