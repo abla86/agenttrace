@@ -37,3 +37,13 @@ jobs:
       - name: Run Deterministic Pytest Suite
         run: |
           pytest -v tests/
+
+      - name: Dependency Audit
+        run: |
+          python -m pip install pip-audit
+          pip-audit
+
+      - name: Static Security Audit
+        run: |
+          python -m pip install bandit
+          bandit -q -r agenttrace promptguard -x tests
