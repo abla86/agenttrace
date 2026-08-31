@@ -9,8 +9,15 @@ from starlette.websockets import WebSocket, WebSocketDisconnect
 from .api import WarRoomRuntime, get_runtime
 
 
+def _event_sequence(event: dict[str, Any], fallback: int) -> int:
+    value = event.get("sequence")
+    if isinstance(value, int):
+        return value
+    return fallback
+
+
 async def event_stream(websocket: WebSocket) -> None:
-    """Stream snapshots from the single War-Room runtime."""
+    """Stream new War-Room events from the single shared runtime."""
     await websocket.accept()
     runtime: WarRoomRuntime = get_runtime()
     last_sequence = -1
@@ -18,17 +25,20 @@ async def event_stream(websocket: WebSocket) -> None:
     try:
         while True:
             snapshot: dict[str, Any] = runtime.state()
-            events = snapshot.get("recent_events", ())
+            events = list(snapshot.get("recent_events", ()))
+            sequenced = [
+                (event, _event_sequence(event, index))
+                for index, event in enumerate(events)
+            ]
             new_events = [
                 event
-                for event in events
-                if int(event.get("sequence", -1)) > last_sequence
+                for event, sequence in sequenced
+                if sequence > last_sequence
             ]
+
             if new_events:
                 last_sequence = max(
-                    int(event["sequence"])
-                    for event in new_events
-                    if "sequence" in event
+                    sequence for _, sequence in sequenced if sequence > last_sequence
                 )
                 await websocket.send_text(
                     json.dumps(
@@ -39,6 +49,7 @@ async def event_stream(websocket: WebSocket) -> None:
                         }
                     )
                 )
+
             await asyncio.sleep(0.2)
     except WebSocketDisconnect:
         return
