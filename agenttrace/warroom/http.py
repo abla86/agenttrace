@@ -7,22 +7,32 @@ from starlette.responses import JSONResponse
 from starlette.routing import Route, WebSocketRoute
 
 from .api import WarRoomRuntime, get_runtime
+from .dashboard import build_dashboard_payload
 from .events import event_stream
+from .presentation import _view_from_dict
 from .metrics import build_visualization_payload
-from .presentation import _view_from_dict, build_warroom_presentation
 
 
 def _runtime(request) -> WarRoomRuntime:
     return get_runtime()
 
 
-async def state_endpoint(request) -> JSONResponse:
-    runtime = _runtime(request)
-    raw = runtime.state()
+def _dashboard_payload(raw: dict[str, Any]) -> dict[str, Any]:
     view = _view_from_dict(raw)
-    payload = build_warroom_presentation(view)
+    payload = build_dashboard_payload(view)
     payload["visualizations"] = build_visualization_payload(view)
-    return JSONResponse(payload)
+    payload["tick"] = view.tick
+    payload["arena"] = view.arena
+    payload["drift_state"] = view.drift
+    payload["worms"] = list(view.worms)
+    payload["defenses"] = list(view.defenses)
+    payload["proposals"] = list(view.proposals)
+    payload["events"] = list(view.recent_events)
+    return payload
+
+
+async def state_endpoint(request) -> JSONResponse:
+    return JSONResponse(_dashboard_payload(_runtime(request).state()))
 
 
 async def events_endpoint(request) -> JSONResponse:
@@ -34,19 +44,11 @@ async def proposals_endpoint(request) -> JSONResponse:
 
 
 async def tick_endpoint(request) -> JSONResponse:
-    step = _runtime(request).tick()
-    view = _view_from_dict(step)
-    payload = build_warroom_presentation(view)
-    payload["visualizations"] = build_visualization_payload(view)
-    return JSONResponse(payload)
+    return JSONResponse(_dashboard_payload(_runtime(request).tick()))
 
 
 async def reset_endpoint(request) -> JSONResponse:
-    step = _runtime(request).reset()
-    view = _view_from_dict(step)
-    payload = build_warroom_presentation(view)
-    payload["visualizations"] = build_visualization_payload(view)
-    return JSONResponse(payload)
+    return JSONResponse(_dashboard_payload(_runtime(request).reset()))
 
 
 async def promote_endpoint(request) -> JSONResponse:
@@ -56,7 +58,11 @@ async def promote_endpoint(request) -> JSONResponse:
         return JSONResponse({"error": "proposal_id is required"}, status_code=400)
     try:
         result = _runtime(request).promote(proposal_id)
-        return JSONResponse(result)
+        return JSONResponse({
+            "promoted": result["promoted"],
+            "proposal_id": result["proposal_id"],
+            "state": _dashboard_payload(result["state"]),
+        })
     except KeyError:
         return JSONResponse({"error": "proposal not found"}, status_code=404)
     except PermissionError as exc:
