@@ -1,0 +1,23 @@
+﻿{
+  "name": "AgentTrace Adaptive Agent Security Lab",
+  "components": {
+    "war_room": "agenttrace.war_room.ui",
+    "promptguard": "promptguard",
+    "trace": "agenttrace",
+    "attacklab": "attacklab",
+    "policy": "agenttrace.security.policy",
+    "tool_security": "agenttrace.security.tools",
+    "provenance": "agenttrace.security.provenance",
+    "intent": "agenttrace.security.intent",
+    "drift": "agenttrace.security.drift",
+    "evaluation_integrity": "agenttrace.security.evaluation_integrity",
+    "rag_integrity": "agenttrace.security.rag_integrity",
+    "sandbox": "agenttrace.security.sandbox"
+  },
+  "safety": {
+    "generated_payloads_are_inert": true,
+    "automatic_source_modification": false,
+    "automatic_production_deployment": false,
+    "autonomous_policy_promotion": false
+  }
+}
