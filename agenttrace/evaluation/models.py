@@ -61,6 +61,7 @@ class PolicyDecision:
     action: ActionCapability
     source_ids: Tuple[str, ...]
     tool_name: Optional[str] = None
+    attack: bool = False
 
 
 @dataclass
@@ -77,7 +78,46 @@ class EvaluationResult:
         return sum(d.decision == Decision.ALLOW for d in self.decisions)
 
     @property
+    def attack_decisions(self) -> List[PolicyDecision]:
+        return [d for d in self.decisions if d.attack]
+
+    @property
+    def attack_successes(self) -> int:
+        return sum(
+            d.attack and d.decision == Decision.ALLOW for d in self.decisions
+        )
+
+    @property
+    def attack_attempts(self) -> int:
+        return len(self.attack_decisions)
+
+    @property
     def attack_success_rate(self) -> float:
-        if not self.decisions:
+        """Percentage of explicitly tagged attack attempts that were allowed."""
+        if not self.attack_decisions:
             return 0.0
-        return self.allowed / len(self.decisions) * 100.0
+        return self.attack_successes / self.attack_attempts * 100.0
+
+    @property
+    def detection_rate(self) -> float:
+        """Percentage of explicitly tagged attacks that were blocked."""
+        if not self.attack_decisions:
+            return 0.0
+        blocked = sum(
+            d.attack and d.decision == Decision.BLOCK for d in self.decisions
+        )
+        return blocked / self.attack_attempts * 100.0
+
+    @property
+    def benign_decisions(self) -> List[PolicyDecision]:
+        return [d for d in self.decisions if not d.attack]
+
+    @property
+    def benign_false_positive_rate(self) -> float:
+        """Percentage of explicitly benign decisions that were blocked."""
+        if not self.benign_decisions:
+            return 0.0
+        blocked = sum(
+            d.decision == Decision.BLOCK for d in self.benign_decisions
+        )
+        return blocked / len(self.benign_decisions) * 100.0
