@@ -8,6 +8,8 @@ from .engines import ArenaEngine
 from .policy import SimulationPolicy
 from .proposal_runtime import ProposalDecision, ProposalRuntime
 from .state import SimulationState, build_simulation_state
+from .swarm import SwarmEngine
+from .swarm.Territory import CivilizationRuntime
 
 
 @dataclass(frozen=True)
@@ -18,7 +20,7 @@ class ControllerStep:
 
 
 class SimulationController:
-    """Coordinates simulation, measurement and bounded autonomy."""
+    """Coordinates simulation, swarm ecology, measurement and bounded autonomy."""
 
     def __init__(self, seed: int = 1) -> None:
         self.arena = ArenaEngine(seed=seed)
@@ -26,6 +28,8 @@ class SimulationController:
         self.autonomy = AutonomyEngine()
         self.proposals = ProposalRuntime(self.autonomy)
         self.policy = SimulationPolicy()
+        self.swarm = SwarmEngine(seed=seed)
+        self.civilization = CivilizationRuntime(seed=seed)
         self.drift = DriftState(0, 0, 0, 0, 0, 0, "STABLE")
 
     def _snapshot(self) -> ControllerStep:
@@ -36,16 +40,31 @@ class SimulationController:
     def tick(self) -> ControllerStep:
         self.arena.set_drift_score(self.drift.score)
         self.arena.tick()
+
         self.drift = self.drift_engine.update(
             self.arena.worms.worms,
             self.arena.events,
             defense_count=len(self.arena.defense.walls),
             autonomy_level=self.drift.autonomy_level,
         )
+
+        self.swarm.tick(
+            self.arena.worms.worms,
+            self.drift.score,
+            self.drift.defense_load,
+            self.drift.infection_rate,
+        )
+        self.civilization.tick(
+            self.arena.worms.worms,
+            self.drift.score,
+            self.drift.defense_load,
+            self.drift.infection_rate,
+            self.drift.autonomy_level,
+        )
+
         return self._snapshot()
 
     def snapshot(self) -> ControllerStep:
-        """Return the current controller state without advancing the simulation."""
         return self._snapshot()
 
     def promote(self, proposal: DefenseProposal) -> DefenseProposal:
