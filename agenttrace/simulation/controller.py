@@ -10,6 +10,7 @@ from .proposal_runtime import ProposalDecision, ProposalRuntime
 from .state import SimulationState, build_simulation_state
 from .swarm import SwarmEngine
 from .swarm_entities import SwarmWorldEngine
+from .threat_runtime import ThreatRuntime, ThreatEvent
 
 
 @dataclass(frozen=True)
@@ -17,10 +18,11 @@ class ControllerStep:
     state: SimulationState
     drift: DriftState
     proposals: tuple[ProposalDecision, ...]
+    threat_events: tuple[ThreatEvent, ...] = ()
 
 
 class SimulationController:
-    """Coordinates simulation, swarm ecology, measurement and bounded autonomy."""
+    """Coordinates simulation, swarm ecology, threat scenarios, measurement and bounded autonomy."""
 
     def __init__(self, seed: int = 1) -> None:
         self.arena = ArenaEngine(seed=seed)
@@ -30,12 +32,13 @@ class SimulationController:
         self.policy = SimulationPolicy()
         self.swarm = SwarmEngine(seed=seed)
         self.world = SwarmWorldEngine(seed=seed)
+        self.threats = ThreatRuntime()
         self.drift = DriftState(0, 0, 0, 0, 0, 0, "STABLE")
 
-    def _snapshot(self) -> ControllerStep:
+    def _snapshot(self, threat_events: tuple[ThreatEvent, ...] = ()) -> ControllerStep:
         state = build_simulation_state(self.arena, self.drift)
         decisions = self.proposals.evaluate(state, self.policy.validate)
-        return ControllerStep(state, self.drift, tuple(decisions))
+        return ControllerStep(state, self.drift, tuple(decisions), threat_events)
 
     def tick(self) -> ControllerStep:
         self.arena.set_drift_score(self.drift.score)
@@ -63,7 +66,14 @@ class SimulationController:
             self.drift.autonomy_level,
         )
 
-        return self._snapshot()
+        metrics = {
+            "infection_rate": self.drift.infection_rate,
+            "memory_pressure": 0.0,
+            "scan_activity": 0.0,
+            "dos_pressure": 0.0,
+        }
+        threat_events = tuple(self.threats.tick(metrics))
+        return self._snapshot(threat_events)
 
     def snapshot(self) -> ControllerStep:
         return self._snapshot()
