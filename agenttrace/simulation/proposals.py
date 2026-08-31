@@ -4,13 +4,13 @@ from dataclasses import dataclass
 from typing import Any
 
 from .autonomy import DefenseProposal
-from .drift import DriftState
 from .state import SimulationState
 
 
 @dataclass(frozen=True)
 class EnrichedProposal:
     proposal: DefenseProposal
+    tick: int
     code: str
     tags: tuple[str, ...]
     risk_level: str
@@ -32,7 +32,13 @@ class ProposalEngine:
             tags.append("propagation_observed")
         if drift.defense_triggers == 0:
             tags.append("no_defense_triggers")
-        return EnrichedProposal(proposal=proposal, code=code, tags=tuple(tags), risk_level=risk_level)
+        return EnrichedProposal(
+            proposal=proposal,
+            tick=state.tick,
+            code=code,
+            tags=tuple(tags),
+            risk_level=risk_level,
+        )
 
     @staticmethod
     def _risk(score: float) -> str:
@@ -47,7 +53,7 @@ class ProposalEngine:
         p = item.proposal
         return {
             "proposal_id": p.proposal_id,
-            "tick": p.metrics_snapshot.active_worms,
+            "tick": item.tick,
             "action": p.action,
             "parameters": dict(p.parameters),
             "reason": p.reason,
