@@ -6,7 +6,6 @@ from typing import Literal
 from .engines import DeterministicRng
 from .models import WormState
 
-
 SpreadMode = Literal["memory", "tools", "rag", "chain", "encrypt"]
 BehaviorAction = Literal["probe", "evade", "attack", "replicate", "hide"]
 
