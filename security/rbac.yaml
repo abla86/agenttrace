@@ -1,27 +1,6 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: policy-server-role
-  namespace: agenttrace
-rules: []
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: policy-server-rolebinding
-  namespace: agenttrace
-subjects:
-  - kind: ServiceAccount
-    name: agenttrace-policy-server-sa
-    namespace: agenttrace
-roleRef:
-  kind: Role
-  name: policy-server-role
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
   name: alert-engine-role
   namespace: agenttrace
 rules:
