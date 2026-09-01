@@ -41,8 +41,10 @@ dev = [
     "mypy>=1.8.0",
     "bandit>=1.7.0",
     "starlette>=0.36.0",
+    "PyYAML>=6.0",
 ]
 web = [
+    "fastapi>=0.115.0",
     "starlette>=0.36.0",
     "uvicorn>=0.30.0",
 ]
