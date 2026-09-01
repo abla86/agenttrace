@@ -10,9 +10,7 @@ readme = "README.md"
 authors = [{ name = "abla86" }]
 license = { text = "MIT" }
 requires-python = ">=3.10"
-dependencies = [
-    "starlette>=0.36.0",
-]
+dependencies = []
 
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -42,8 +40,10 @@ dev = [
     "ruff>=0.3.0",
     "mypy>=1.8.0",
     "bandit>=1.7.0",
+    "starlette>=0.36.0",
 ]
 web = [
+    "starlette>=0.36.0",
     "uvicorn>=0.30.0",
 ]
 warroom = [
