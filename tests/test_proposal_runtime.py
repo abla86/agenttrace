@@ -1,8 +1,8 @@
-from agenttrace.simulation.autonomy import AutonomyEngine, DefenseProposal
+from agenttrace.simulation.autonomy import DefenseProposal
 from agenttrace.simulation.drift import DriftState
-from agenttrace.simulation.proposals import ProposalEngine
 from agenttrace.simulation.proposal_runtime import ProposalRuntime
 from agenttrace.simulation.proposal_view import to_proposal_view
+from agenttrace.simulation.proposals import ProposalEngine
 from agenttrace.simulation.state import SimulationState
 
 
