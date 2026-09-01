@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 from .state import SimulationState
 
@@ -13,7 +12,7 @@ class ReplayFrame:
 
 
 class ReplayBuffer:
-    """Bounded replay buffer for deterministic War-Room visualisation."""
+    """Bounded replay buffer for deterministic simulation output."""
 
     def __init__(self, max_frames: int = 200) -> None:
         if max_frames < 1:
