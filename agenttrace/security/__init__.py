@@ -7,9 +7,9 @@ from .platform import (
     Role,
     SecurityHealth,
     health,
+    request_digest,
     require_mode,
     require_role,
-    request_digest,
     sign_internal_message,
     verify_internal_message,
 )
@@ -23,9 +23,9 @@ __all__ = [
     "Role",
     "SecurityHealth",
     "health",
+    "request_digest",
     "require_mode",
     "require_role",
-    "request_digest",
     "sign_internal_message",
     "verify_internal_message",
 ]
