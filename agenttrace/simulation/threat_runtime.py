@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List
 
-from .scenes import SceneManager, default_scene_manager, Scene
-from .species import SpeciesRegistry, default_species_registry, Species
+from .scenes import SceneManager, default_scene_manager
+from .species import SpeciesRegistry, default_species_registry
 from .threats import AttackEngine, MultiSwarmPolicy
 
 
@@ -15,7 +14,7 @@ class ThreatEntity:
     kind: str
     scene_id: str
     attack_profile: str
-    genome: Dict[str, float] = field(default_factory=dict)
+    genome: dict[str, float] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -30,7 +29,7 @@ class ThreatEvent:
 class MultiSpeciesEngine:
     def __init__(self, species: SpeciesRegistry | None = None) -> None:
         self.species = species or default_species_registry()
-        self.entities: List[ThreatEntity] = []
+        self.entities: list[ThreatEntity] = []
 
     def spawn(self, species_id: str, scene_id: str, entity_id: str) -> ThreatEntity:
         spec = self.species.get(species_id)
