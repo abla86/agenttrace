@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agenttrace"
-version = "1.0.0"
-description = "Deterministic provenance, policy evaluation, audit tracing, and action gateway for AI agents"
+version = "1.0.1"
+description = "A portable tracing, provenance, policy and audit layer for AI-agent systems"
 readme = "README.md"
 authors = [{ name = "abla86" }]
 license = { text = "MIT" }
@@ -46,17 +46,12 @@ web = [
     "starlette>=0.36.0",
     "uvicorn>=0.30.0",
 ]
-warroom = [
-    "streamlit>=1.32.0",
-    "uvicorn>=0.30.0",
-]
 
 [tool.setuptools.packages.find]
-include = ["agenttrace*", "promptguard*"]
+include = ["agenttrace*"]
 
 [tool.setuptools.package-data]
 agenttrace = ["py.typed"]
-promptguard = ["py.typed"]
 
 [tool.pytest.ini_options]
 minversion = "7.0"
