@@ -1,0 +1,47 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: agenttrace-policy-server
+  namespace: agenttrace
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "endpoints"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: agenttrace-policy-server
+  namespace: agenttrace
+subjects:
+  - kind: ServiceAccount
+    name: agenttrace-policy-server
+    namespace: agenttrace
+roleRef:
+  kind: Role
+  name: agenttrace-policy-server
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: agenttrace-alert-engine
+  namespace: agenttrace
+rules:
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: agenttrace-alert-engine
+  namespace: agenttrace
+subjects:
+  - kind: ServiceAccount
+    name: agenttrace-alert-engine
+    namespace: agenttrace
+roleRef:
+  kind: Role
+  name: agenttrace-alert-engine
+  apiGroup: rbac.authorization.k8s.io
