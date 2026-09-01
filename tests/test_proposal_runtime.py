@@ -2,7 +2,7 @@ from agenttrace.simulation.autonomy import AutonomyEngine, DefenseProposal
 from agenttrace.simulation.drift import DriftState
 from agenttrace.simulation.proposals import ProposalEngine
 from agenttrace.simulation.proposal_runtime import ProposalRuntime
-from agenttrace.simulation.proposal_view import to_warroom_proposal
+from agenttrace.simulation.proposal_view import to_proposal_view
 from agenttrace.simulation.state import SimulationState
 
 
@@ -24,7 +24,7 @@ def test_runtime_creates_single_enriched_proposal() -> None:
     runtime = ProposalRuntime()
     decisions = runtime.evaluate(state, lambda proposal: True)
     assert len(decisions) == 1
-    view = to_warroom_proposal(decisions[0].proposal)
+    view = to_proposal_view(decisions[0].proposal)
     assert view["code"].startswith("DEF_HIGH_000007_")
     assert "autonomy_proposal" in view["tags"]
     assert view["risk_level"] == "high"
@@ -38,7 +38,7 @@ def test_unapproved_proposal_cannot_be_promoted() -> None:
     decisions = runtime.evaluate(state, lambda proposal: False)
     assert decisions[0].approved is False
     assert decisions[0].proposal.proposal.approved is False
-    assert to_warroom_proposal(decisions[0].proposal)["can_promote"] is False
+    assert to_proposal_view(decisions[0].proposal)["can_promote"] is False
 
 
 def test_proposal_engine_risk_bands() -> None:
