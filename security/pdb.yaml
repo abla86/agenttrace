@@ -1,0 +1,21 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: agenttrace-policy-server
+  namespace: agenttrace
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: agenttrace-policy-server
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: agenttrace-dashboard
+  namespace: agenttrace
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: agenttrace-dashboard
