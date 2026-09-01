@@ -1,0 +1,56 @@
+replicaCount: 2
+
+image:
+  repository: ghcr.io/abla86/agenttrace
+  tag: "master"
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 8000
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: "2"
+    memory: 2Gi
+
+securityContext:
+  pod:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  container:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+
+networkPolicy:
+  enabled: true
+  clientNamespaceSelector: {}
+  clientPodSelector:
+    agenttrace-client: "true"
+  dnsNamespaceSelector:
+    kubernetes.io/metadata.name: kube-system
+  vault:
+    enabled: false
+    namespace: vault
+    podSelector:
+      app.kubernetes.io/name: vault
+    port: 8200
+
+vault:
+  enabled: false
+  role: agenttrace-policy-server
+  secretPath: secret/data/agenttrace/policy-server
+
+istio:
+  enabled: false
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

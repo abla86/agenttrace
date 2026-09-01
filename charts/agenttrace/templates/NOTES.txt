@@ -1,0 +1,10 @@
+AgentTrace policy server has been rendered for namespace {{ .Release.Namespace }}.
+
+Service:
+  {{ include "agenttrace.fullname" . }}:{{ .Values.service.port }}
+
+Security defaults:
+  - Pod Security Admission: restricted
+  - NetworkPolicy: default deny
+  - ServiceAccount: least privilege
+  - Container: non-root, RuntimeDefault seccomp, no privilege escalation, all capabilities dropped
