@@ -1,125 +1,121 @@
-# AgentTrace — Adaptive Agent Security Lab
+# AgentTrace
 
-AgentTrace is a local security laboratory and visual operator environment for evaluating AI-agent security workflows.
+**A portable tracing, provenance, policy and audit layer for AI-agent systems.**
 
-It unifies:
+AgentTrace is designed to sit beside an existing agent application and make its security-relevant decisions observable, reproducible and auditable. The core API does not require the War-Room UI.
 
-- PromptGuard detection and containment
-- AgentTrace provenance/taint and policy evaluation
-- tool capability and integrity verification
-- bounded multi-step attack simulation
-- controlled mutation/evolution experiments
-- audit and trace evidence
-- the War-Room visual interface for observing and controlling simulations
+## What it provides
 
-## One application
+- **Traceable state** — typed nodes with deterministic content hashes and parent relationships.
+- **Provenance / taint** — explicit source labels such as user intent, untrusted RAG, tool output and internal secrets.
+- **Policy evaluation** — phase- and capability-aware ALLOW/BLOCK decisions.
+- **Tool integrity** — manifest registration and fingerprint/Merkle evidence.
+- **Audit evidence** — canonical event digests and reproducible Merkle roots.
+- **Bounded simulation** — attack scenarios are inert test data; payloads are not executed.
+- **Runtime gateway** — optional local HTTP interception and audit surface.
+- **War-Room** — optional visual control and simulation surface built on the same event/state model.
 
-The project has one security model and one event model.
+## Install
 
-The UI provides multiple modes over the same state:
+Core:
 
-- **Agent Defense Lab** — evaluation, propagation, taint, drift and defense analysis
-- **War-Room** — visual attack/defense arena, worm controls, honeypot views and replay
-- **System** — health, diagnostics, audit and controlled autonomy
+```bash
+pip install agenttrace
+```
 
-The War-Room is a presentation/control surface. It does not replace the security engine.
+Optional HTTP tooling:
+
+```bash
+pip install "agenttrace[web]"
+```
+
+Development:
+
+```bash
+pip install "agenttrace[dev]"
+pytest -q
+ruff check .
+```
+
+## Minimal integration
+
+```python
+from agenttrace import EvaluationLab, ActionCapability, AgentPhase, TaintLabel
+
+lab = EvaluationLab()
+
+lab.add_node(
+    "user-1",
+    TaintLabel.USER_INTENT,
+    "read the requested record",
+)
+
+result = lab.evaluate(
+    "example",
+    AgentPhase.EXECUTION,
+    ActionCapability.READ,
+    ["user-1"],
+)
+
+print(result.decisions[0].decision)
+print(lab.audit_root())
+```
+
+For applications that want a lower-level or explicitly named integration surface:
+
+```python
+from agenttrace.api import TraceNode, PolicyEngine, AuditLog
+```
 
 ## Architecture
 
 ```text
-War-Room UI
-    |
-    v
-Security event/state model
-    |
-    +--> PromptGuard
-    +--> provenance / taint
-    +--> capability policy
-    +--> tool integrity
-    +--> intent / behaviour drift
-    +--> attack evaluation
-    +--> audit / trace
-    |
-    +--> bounded sandboxed simulation
+Existing agent / application
+            |
+            v
+       AgentTrace core
+     +------+-------+------+
+     |      |       |      |
+   Trace  Policy  Audit  Integrity
+     |      |       |      |
+     +------+-------+------+
+            |
+       optional adapters
+       /       |       \
+    HTTP   PromptGuard  War-Room
 ```
 
-## Safety model
+The important boundary is deliberate: **the core does not depend on the War-Room UI**. A consumer can use AgentTrace as a library without running a dashboard or simulator.
 
-Generated attack material is inert simulation data. The platform does not execute generated attack payloads.
+## Safety and scope
 
-Autonomy is deliberately bounded:
-
-1. generate
-2. simulate
-3. evaluate
-4. propose
-5. validate
-6. explicitly promote
+AgentTrace is an evaluation and observability component, not a universal security guarantee. Detection, lexical similarity, taint labels and integrity fingerprints have explicit limits. Generated attack material is treated as inert simulation data.
 
 The system does not silently rewrite its own source code or deploy production security changes.
 
-## Integrity
+## Reproducibility
 
-Tool manifest hashes and Merkle roots provide tamper/drift evidence for registered tool definitions. They do not prove that a tool is semantically safe.
+Security decisions and bounded scenario generation are designed to be reproducible. Hashes use stable canonical representations. Performance claims are not made without benchmark evidence.
 
-Trace hashing provides reproducible evidence of recorded state. It is not a cryptographic guarantee about the external agent or environment.
+## Package design
 
-## Determinism
-
-Security decisions and bounded scenario generation are designed to be reproducible. Cryptographic hashing uses stable algorithms rather than process-randomized language hashes.
-
-No latency claim is made until it has been measured with a published benchmark methodology.
-
-## Research position
-
-This is an evaluation platform, not a claim that prompt injection or agentic compromise can be universally prevented.
-
-The testable unit is the complete security decision chain:
+The intended dependency direction is:
 
 ```text
-attack
- -> mutation
- -> source/provenance
- -> taint
- -> intent
- -> phase
- -> requested capability
- -> tool integrity
- -> policy
- -> defense
- -> outcome
- -> trace
- -> visual event
- -> metric
+agenttrace core
+   ^
+   |
+adapters / integrations
+   ^
+   |
+applications such as War-Room
 ```
 
-Potential evaluation measures include attack-success rate, detection rate, false positives, privileged-action blocks, tool-drift detection, intent/behaviour drift, latency, reproducibility and explanation completeness.
+This keeps the reusable engine independent from presentation.
 
-## Development
+## Status
 
-```powershell
-python -m pip install -e ".[dev]"
-pytest -q
-ruff check .
-python -m agenttrace.cli self-test
-```
-
-For the runtime gateway:
-
-```powershell
-uvicorn agenttrace.runtime.gateway:app --reload
-```
-
-The War-Room frontend is located under `agenttrace/web/war-room` after integration.
-
-## Limitations
-
-- lexical and bounded similarity are not general semantic understanding
-- no detector guarantees prevention of unknown attacks
-- Merkle/fingerprint checks detect integrity changes but not semantic safety
-- the visual War-Room is not a production security boundary
-- autonomous evolution is controlled experimentation, not self-modifying production software
-- the runtime layer is a local policy/audit gateway, not a universal LLM-provider proxy
+The project is under active development. The public package API is intentionally small; internal modules may evolve without being treated as stable integration points.
 
 ## License
 
