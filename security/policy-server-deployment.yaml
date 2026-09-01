@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agenttrace-policy-server
+  namespace: agenttrace
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: agenttrace-policy-server
+  template:
+    metadata:
+      labels:
+        app: agenttrace-policy-server
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: agenttrace-policy-server
+        vault.hashicorp.com/agent-inject-secret-config: secret/data/agenttrace/policy-server
+    spec:
+      serviceAccountName: agenttrace-policy-server-sa
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: policy-server
+          image: agenttrace/policy-server:latest
+          ports:
+            - containerPort: 8000
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
