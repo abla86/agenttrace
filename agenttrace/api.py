@@ -1,7 +1,7 @@
-"""Small stable public API for integrating AgentTrace into applications.
+"""Stable public integration surface for AgentTrace.
 
-The integration surface intentionally exposes core models and services without
-requiring the optional War-Room UI.
+The public API exposes core models and services without requiring
+application-specific dashboards or infrastructure integrations.
 """
 
 from .audit.audit_log import AuditEvent, AuditLog, merkle_root, sha256
