@@ -5,10 +5,13 @@ import { projectPathInput } from "./PathProjection";
 import { GPUPathLayer } from "./GPUPathLayer";
 
 /**
- * Bridges the low-level GPUPathLayer into the existing RenderPass contract.
+ * Adapts GPUPathLayer to the existing RenderPass contract without modifying
+ * RenderContext or ProjectedWorld.
  *
- * ProjectedWorld remains unchanged. Defenses and recent events come from the
- * authoritative WarRoomViewModel supplied through getViewModel().
+ * The authoritative defenses/recent events remain in WarRoomViewModel.
+ * The low-level GPUPathLayer owns its own render target and returns its texture;
+ * this adapter intentionally treats that texture as an internal side effect
+ * because the current RenderPass contract has no output-texture channel.
  */
 export class PathRenderPassAdapter implements RenderPass {
   private readonly gpuPath: GPUPathLayer;
