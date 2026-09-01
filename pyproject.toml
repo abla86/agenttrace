@@ -20,7 +20,20 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Security",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Operating System :: OS Independent",
+    "Typing :: Typed",
 ]
+[project.urls]
+Homepage = "https://github.com/abla86/agenttrace"
+Repository = "https://github.com/abla86/agenttrace"
+Issues = "https://github.com/abla86/agenttrace/issues"
+
+[tool.setuptools.packages.find]
+include = ["agenttrace*"]
+
+[tool.setuptools.package-data]
+agenttrace = ["py.typed"]
+
 dependencies = [
     "starlette>=0.36.0",
 ]
