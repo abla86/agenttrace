@@ -35,7 +35,8 @@ spec:
             matchLabels:
               kubernetes.io/metadata.name: {{ .Values.networkPolicy.vault.namespace | quote }}
           podSelector:
-            {{- toYaml .Values.networkPolicy.vault.podSelector | nindent 12 }}
+            matchLabels:
+              {{- toYaml .Values.networkPolicy.vault.podSelector | nindent 14 }}
       ports:
         - protocol: TCP
           port: {{ .Values.networkPolicy.vault.port }}
@@ -55,7 +56,8 @@ spec:
   ingress:
     - from:
         - namespaceSelector:
-            {{- toYaml .Values.networkPolicy.clientNamespaceSelector | nindent 12 }}
+            matchLabels:
+              {{- toYaml .Values.networkPolicy.clientNamespaceSelector | nindent 14 }}
           podSelector:
             matchLabels:
               {{- toYaml .Values.networkPolicy.clientPodSelector | nindent 14 }}
