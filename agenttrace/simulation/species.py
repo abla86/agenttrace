@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, Mapping
+from typing import Mapping, Dict
 
 
 SpeciesKind = str
@@ -18,7 +18,7 @@ class Species:
 
 class SpeciesRegistry:
     def __init__(self) -> None:
-        self._species: Dict[str, Species] = {}
+        self._species: dict[str, Species] = {}
 
     def register(self, species: Species) -> None:
         if not species.id:
