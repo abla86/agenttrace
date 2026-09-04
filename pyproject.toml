@@ -33,6 +33,9 @@ Homepage = "https://github.com/abla86/agenttrace"
 Repository = "https://github.com/abla86/agenttrace"
 Issues = "https://github.com/abla86/agenttrace/issues"
 
+[project.scripts]
+agenttrace = "agenttrace.cli:main"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
