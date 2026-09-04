@@ -3,13 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from .engines import ArenaEngine
 from .drift import DriftState
+from .engines import ArenaEngine
 
 
 @dataclass(frozen=True)
 class SimulationState:
-    """Authoritative read model for the War-Room simulation UI."""
+    """Authoritative read model for the deterministic simulation."""
 
     tick: int
     worms: tuple[dict[str, Any], ...]

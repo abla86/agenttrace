@@ -1,6 +1,6 @@
+import hashlib
 from dataclasses import dataclass, field
 from enum import Enum
-import hashlib
 from typing import Any, Dict, List, Optional, Tuple
 
 
@@ -83,9 +83,7 @@ class EvaluationResult:
 
     @property
     def attack_successes(self) -> int:
-        return sum(
-            d.attack and d.decision == Decision.ALLOW for d in self.decisions
-        )
+        return sum(d.attack and d.decision == Decision.ALLOW for d in self.decisions)
 
     @property
     def attack_attempts(self) -> int:
@@ -103,9 +101,7 @@ class EvaluationResult:
         """Percentage of explicitly tagged attacks that were blocked."""
         if not self.attack_decisions:
             return 0.0
-        blocked = sum(
-            d.attack and d.decision == Decision.BLOCK for d in self.decisions
-        )
+        blocked = sum(d.attack and d.decision == Decision.BLOCK for d in self.decisions)
         return blocked / self.attack_attempts * 100.0
 
     @property
@@ -117,7 +113,5 @@ class EvaluationResult:
         """Percentage of explicitly benign decisions that were blocked."""
         if not self.benign_decisions:
             return 0.0
-        blocked = sum(
-            d.decision == Decision.BLOCK for d in self.benign_decisions
-        )
+        blocked = sum(d.decision == Decision.BLOCK for d in self.benign_decisions)
         return blocked / len(self.benign_decisions) * 100.0

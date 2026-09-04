@@ -3,7 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from time import monotonic
 
-from agenttrace.security.platform import AccessDenied, AuthContext, LockdownController, ReplayGuard, Role
+from agenttrace.security.platform import (
+    AccessDenied,
+    AuthContext,
+    LockdownController,
+    ReplayGuard,
+    Role,
+)
 
 
 class RequestRejected(ValueError):
@@ -16,12 +22,14 @@ class RequestLimits:
     max_text_chars: int = 100_000
 
 
-def validate_body_size(body: bytes, limits: RequestLimits = RequestLimits()) -> None:
+def validate_body_size(body: bytes, limits: RequestLimits | None = None) -> None:
+    limits = limits or RequestLimits()
     if len(body) > limits.max_body_bytes:
         raise RequestRejected("REQUEST_BODY_TOO_LARGE")
 
 
-def validate_text_size(text: str, limits: RequestLimits = RequestLimits()) -> None:
+def validate_text_size(text: str, limits: RequestLimits | None = None) -> None:
+    limits = limits or RequestLimits()
     if len(text) > limits.max_text_chars:
         raise RequestRejected("TEXT_INPUT_TOO_LARGE")
 

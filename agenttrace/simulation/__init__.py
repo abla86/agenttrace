@@ -13,11 +13,18 @@ from .swarm_entities import (
     CivilizationEngine,
     Colony,
     ColonyEngine,
+    SwarmWorldEngine,
     Territory,
     TerritoryEngine,
-    SwarmWorldEngine,
 )
-from .threats import SceneManager, SceneProfile, ThreatPattern, ThreatProfile, ThreatSimulationEngine, ThreatSpecies
+from .threats import (
+    SceneManager,
+    SceneProfile,
+    ThreatPattern,
+    ThreatProfile,
+    ThreatSimulationEngine,
+    ThreatSpecies,
+)
 
 __all__ = [
     "ArenaEngine",

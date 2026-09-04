@@ -3,8 +3,6 @@ import json
 
 from .evaluation.models import (
     ActionCapability,
-    AgentPhase,
-    TaintLabel,
     ToolManifest,
     TraceNode,
 )

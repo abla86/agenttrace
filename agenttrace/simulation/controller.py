@@ -10,7 +10,7 @@ from .proposal_runtime import ProposalDecision, ProposalRuntime
 from .state import SimulationState, build_simulation_state
 from .swarm import SwarmEngine
 from .swarm_entities import SwarmWorldEngine
-from .threat_runtime import ThreatRuntime, ThreatEvent
+from .threat_runtime import ThreatEvent, ThreatRuntime
 
 
 @dataclass(frozen=True)

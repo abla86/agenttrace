@@ -10,7 +10,7 @@ Local security laboratory for evaluating AI-agent security workflows and provena
 - Bounded attack simulation
 - Audit and trace evidence
 - Reproducible state/decision modelling
-- Visual War-Room integration
+- Deterministic scenario and replay modelling
 
 ## Safety boundary
 Generated attack material is inert simulation data. Autonomous experimentation is bounded to controlled local scenarios and does not silently modify or deploy production systems.
