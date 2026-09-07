@@ -1,14 +1,15 @@
 import unittest
 
 from agenttrace.audit.audit_log import AuditLog
-from agenttrace.evaluation.lab import EvaluationLab
 from agenttrace.evaluation.models import (
+
     ActionCapability,
     AgentPhase,
     Decision,
     TaintLabel,
     ToolManifest,
 )
+from agenttrace.evaluation.lab import EvaluationLab
 from agenttrace.policy.tool_registry import ToolManifestRegistry
 
 
