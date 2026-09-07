@@ -40,7 +40,7 @@ class FastSemanticEmbedder:
 
     @staticmethod
     def sim(v1: List[float], v2: List[float]) -> float:
-        return max(0.0, min(1.0, sum(a * b for a, b in zip(v1, v2))))
+        return max(0.0, min(1.0, sum(a * b for a, b in zip(v1, v2, strict=True))))
 
 
 class SemanticJailbreakDetector:
