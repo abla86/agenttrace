@@ -2,7 +2,6 @@ import unittest
 
 from agenttrace.audit.audit_log import AuditLog
 from agenttrace.evaluation.models import (
-
     ActionCapability,
     AgentPhase,
     Decision,
