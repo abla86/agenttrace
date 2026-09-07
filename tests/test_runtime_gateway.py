@@ -1,7 +1,8 @@
 import unittest
 
-from agenttrace.runtime.gateway import app
 from starlette.testclient import TestClient
+
+from agenttrace.runtime.gateway import app
 
 
 class TestRuntimeGateway(unittest.TestCase):
