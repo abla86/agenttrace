@@ -1,5 +1,5 @@
-from agenttrace.simulation.models import SimulationEvent
 from agenttrace.simulation.drift import DriftState
+from agenttrace.simulation.models import SimulationEvent
 from agenttrace.simulation.replay import ReplayBuffer
 from agenttrace.simulation.state import SimulationState
 from agenttrace.simulation.visual_events import to_visual_event
