@@ -120,3 +120,7 @@ The project is under active development. The public package API is intentionally
 ## License
 
 MIT
+
+## Safety and verification
+
+AgentTrace is deterministic by design. Public demonstrations should use synthetic traces and must not imply that external tools, systems, or production agents were contacted.
