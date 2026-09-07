@@ -10,7 +10,7 @@ def test_mutation_event_drives_mutate_effect() -> None:
     view = build_warroom_view(step)
 
     view.recent_events = (
-        
+
             {
                 "sequence": 1,
                 "type": "WORM_MUTATED",
@@ -30,7 +30,7 @@ def test_defense_event_drives_evade_effect() -> None:
     step = controller.tick()
     view = build_warroom_view(step)
     view.recent_events = (
-        
+
             {
                 "sequence": 1,
                 "type": "DEFENSE_TRIGGERED",
