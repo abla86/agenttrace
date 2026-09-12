@@ -18,6 +18,16 @@ class DriftState:
     infection_rate: float = 0.0
     autonomy_level: float = 0.0
 
+    @property
+    def incident_rate(self) -> float:
+        """Backward-compatible war-room metric derived from injury events."""
+        return self.injury_rate
+
+    @property
+    def health_index(self) -> float:
+        """Inverse risk score used by the read-only war-room view."""
+        return round(max(0.0, min(100.0, 100.0 - self.score)), 2)
+
 
 class DriftEngine:
     """Derives bounded simulation health metrics; it does not control policy."""
