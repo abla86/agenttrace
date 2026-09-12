@@ -53,7 +53,7 @@ warroom = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["agenttrace*", "promptguard*"]
+include = ["agenttrace*", "promptguard*", "core_integration*"]
 
 [tool.setuptools.package-data]
 agenttrace = ["py.typed"]
