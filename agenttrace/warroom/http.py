@@ -29,7 +29,9 @@ def _dashboard_payload(raw: dict[str, Any]) -> dict[str, Any]:
     payload["worms"] = list(view.worms)
     payload["defenses"] = list(view.defenses)
     payload["proposals"] = list(view.proposals)
-    payload["events"] = list(view.recent_events)
+    events = list(view.recent_events)
+    payload["events"] = events
+    payload["recent_events"] = events
     return payload
 
 
