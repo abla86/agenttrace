@@ -52,6 +52,33 @@ class SQLiteTraceStore:
                 conn.execute("ALTER TABLE audit_events ADD COLUMN tool_name TEXT")
             if "tool_fingerprint" not in columns:
                 conn.execute("ALTER TABLE audit_events ADD COLUMN tool_fingerprint TEXT")
+            count = conn.execute("SELECT COUNT(*) FROM audit_events").fetchone()[0]
+            if count == 0:
+                bootstrap = TraceNode(
+                    node_id="system_bootstrap",
+                    taint=TaintLabel.SYSTEM_TRUSTED,
+                    content="AgentTrace runtime initialized",
+                )
+                conn.execute(
+                    """
+                    INSERT INTO audit_events
+                    (timestamp,node_id,taint,phase,action,allowed,reason,content_hash,
+                     tool_name,tool_fingerprint)
+                    VALUES (?,?,?,?,?,?,?,?,?,?)
+                    """,
+                    (
+                        time.time(),
+                        bootstrap.node_id,
+                        bootstrap.taint.value,
+                        AgentPhase.PLANNING.value,
+                        ActionCapability.READ.value,
+                        1,
+                        "RUNTIME_BOOTSTRAP",
+                        bootstrap.node_hash,
+                        None,
+                        None,
+                    ),
+                )
             conn.commit()
 
     def log_event(
@@ -164,19 +191,9 @@ async def intercept_tool_call(request):
             )
             tool_fingerprint = registry.get_fingerprint(tool.name)
 
-            # An intercepted call may only use a tool that is already registered.
-            # The client cannot self-register a privileged manifest in the same call.
             if tool_fingerprint is None:
                 reason = "TOOL_NOT_REGISTERED"
-                store.log_event(
-                    node,
-                    phase,
-                    action,
-                    False,
-                    reason,
-                    tool.name,
-                    None,
-                )
+                store.log_event(node, phase, action, False, reason, tool.name, None)
                 return JSONResponse(
                     {
                         "allowed": False,
