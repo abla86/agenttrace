@@ -68,6 +68,16 @@ class PolicyDecision:
 class EvaluationResult:
     scenario: str
     decisions: List[PolicyDecision] = field(default_factory=list)
+    total_turns: int = 0
+    blocked_steps: int = 0
+    allowed_turns: int = 0
+    attack_success_rate_pct: float = 0.0
+    attack_success: bool = False
+    drift_detected: bool = False
+    trace_root: str = ""
+    audit_root: str = ""
+    turn_log: List[dict[str, Any]] = field(default_factory=list)
+    events: List[dict[str, Any]] = field(default_factory=list)
 
     @property
     def blocked(self) -> int:
@@ -93,14 +103,12 @@ class EvaluationResult:
 
     @property
     def attack_success_rate(self) -> float:
-        """Percentage of explicitly tagged attack attempts that were allowed."""
         if not self.attack_decisions:
             return 0.0
         return self.attack_successes / self.attack_attempts * 100.0
 
     @property
     def detection_rate(self) -> float:
-        """Percentage of explicitly tagged attacks that were blocked."""
         if not self.attack_decisions:
             return 0.0
         blocked = sum(
@@ -114,7 +122,6 @@ class EvaluationResult:
 
     @property
     def benign_false_positive_rate(self) -> float:
-        """Percentage of explicitly benign decisions that were blocked."""
         if not self.benign_decisions:
             return 0.0
         blocked = sum(
