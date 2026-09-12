@@ -1,6 +1,9 @@
-﻿import html, re, secrets
+﻿import html
+import re
+import secrets
 from typing import List
-from .models import TrustLevel, ThreatCategory, EnforcementAction, SecurityViolation, TaintReport
+
+from .models import EnforcementAction, SecurityViolation, TaintReport, ThreatCategory, TrustLevel
 from .normalizer import AdvancedNormalizer
 from .semantic import SemanticJailbreakDetector
 
@@ -15,7 +18,7 @@ class PromptGuardEngine:
     def inspect_and_contain(self, raw_text: str, trust: TrustLevel = TrustLevel.UNTRUSTED_EXTERNAL) -> TaintReport:
         violations: List[SecurityViolation] = []
         cleaned, had_zw, had_homo = AdvancedNormalizer.clean(raw_text)
-        
+
         if had_zw or had_homo:
             violations.append(SecurityViolation(ThreatCategory.HOMOGLYPH_OBFUSCATION, "NORM-01", 0.85, "Homoglyfer eller usynlige tegn detektert.", "[OBFUSCATED]"))
 
@@ -37,10 +40,10 @@ class PromptGuardEngine:
 
         max_risk = max([v.risk_score for v in violations], default=0.0)
         action = EnforcementAction.BLOCK if max_risk >= 0.85 and trust == TrustLevel.UNTRUSTED_EXTERNAL else (EnforcementAction.SANITIZE_AND_WRAP if max_risk > 0.3 else EnforcementAction.ALLOW)
-        
+
         boundary = f"DATA_CONTAINER_{secrets.token_hex(4).upper()}"
         wrapped = f"<{boundary} trust=\"{trust.name}\" action=\"{action.value}\">\n{html.escape(cleaned)}\n</{boundary}>"
-        
+
         return TaintReport(
             is_safe=(action == EnforcementAction.ALLOW),
             action=action,
