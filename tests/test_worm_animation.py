@@ -9,16 +9,15 @@ def test_mutation_event_drives_mutate_effect() -> None:
     step = controller.tick()
     view = build_warroom_view(step)
 
-    view.recent_events = tuple(
-        [
+    view.recent_events = (
+
             {
                 "sequence": 1,
                 "type": "WORM_MUTATED",
                 "worm_id": "w1",
                 "details": {"mutation": "speed"},
             }
-        ]
-    )
+        )
 
     animated = build_animated_worms(view)
     assert animated[0]["effect"] == "mutate"
@@ -30,16 +29,15 @@ def test_defense_event_drives_evade_effect() -> None:
     controller.arena.worms.spawn(id="w1", x=5.0, y=5.0)
     step = controller.tick()
     view = build_warroom_view(step)
-    view.recent_events = tuple(
-        [
+    view.recent_events = (
+
             {
                 "sequence": 1,
                 "type": "DEFENSE_TRIGGERED",
                 "worm_id": "w1",
                 "details": {},
             }
-        ]
-    )
+        )
 
     animated = build_animated_worms(view)
     assert animated[0]["effect"] == "evade"

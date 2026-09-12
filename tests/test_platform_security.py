@@ -9,12 +9,13 @@ from agenttrace.security.platform import (
     ReplayGuard,
     Role,
     health,
+    request_digest,
     require_mode,
     require_role,
-    request_digest,
     sign_internal_message,
     verify_internal_message,
 )
+
 
 
 class TestPlatformSecurity(unittest.TestCase):

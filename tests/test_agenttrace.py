@@ -1,7 +1,6 @@
-﻿import unittest
+import unittest
 
-from agenttrace.audit.audit_log import AuditLog, merkle_root
-from agenttrace.evaluation.lab import EvaluationLab
+from agenttrace.audit.audit_log import AuditLog
 from agenttrace.evaluation.models import (
     ActionCapability,
     AgentPhase,
@@ -9,6 +8,7 @@ from agenttrace.evaluation.models import (
     TaintLabel,
     ToolManifest,
 )
+from agenttrace.evaluation.lab import EvaluationLab
 from agenttrace.policy.tool_registry import ToolManifestRegistry
 
 

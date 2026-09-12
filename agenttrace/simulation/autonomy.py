@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Iterator
 from uuid import uuid4
 
 from .drift import DriftState
@@ -18,6 +18,10 @@ class DefenseProposal:
     validated: bool = False
     approved: bool = False
     requires_explicit_promotion: bool = True
+
+    def __iter__(self) -> Iterator[DefenseProposal]:
+        """Allow legacy callers that iterate over a single proposal."""
+        yield self
 
 
 class AutonomyEngine:
@@ -44,7 +48,14 @@ class AutonomyEngine:
             }
         return None
 
-    def propose(self, state: SimulationState, analysis: dict[str, object] | None) -> DefenseProposal | None:
+    def propose(
+        self,
+        state: SimulationState | DriftState,
+        analysis: dict[str, object] | None = None,
+    ) -> DefenseProposal | None:
+        drift = state.drift if isinstance(state, SimulationState) else state
+        if analysis is None:
+            analysis = self.analyze(drift)
         if analysis is None:
             return None
         self.sequence += 1
@@ -53,7 +64,7 @@ class AutonomyEngine:
             reason=str(analysis["reason"]),
             action=str(analysis["action"]),
             parameters=dict(analysis["parameters"]),
-            metrics_snapshot=state.drift,
+            metrics_snapshot=drift,
         )
 
     def validate(

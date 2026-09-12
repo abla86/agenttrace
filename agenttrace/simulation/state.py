@@ -56,7 +56,7 @@ def build_simulation_state(arena: ArenaEngine, drift: DriftState) -> SimulationS
         for event in arena.events
     )
     return SimulationState(
-        tick=arena.sequence,
+        tick=arena.tick_number,
         worms=worms,
         defenses=defenses,
         drift=drift,

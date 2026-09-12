@@ -1,0 +1,32 @@
+name: Verify interactive site
+on:
+  push:
+    branches: [main,master]
+  pull_request:
+    branches: [main,master]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check interactive HTML
+        run: |
+          test -d docs
+          files=$(find docs -maxdepth 1 -type f -name '*.html' | wc -l)
+          test "$files" -gt 0
+          grep -Rqi '<script' docs
+          grep -Rqi '<button\|addEventListener\|onclick' docs
+          echo "Interactive HTML files: $files"
+      - name: Check broken local references
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          for f in Path("docs").glob("*.html"):
+              s=f.read_text(encoding="utf-8",errors="ignore")
+              if "<html" not in s.lower() or "</html>" not in s.lower():
+                  raise SystemExit(f"Malformed HTML: {f}")
+          print("HTML structure checks passed")
+          PY

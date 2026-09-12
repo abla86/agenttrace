@@ -1,5 +1,8 @@
-﻿import re, unicodedata, urllib.parse, base64
-from typing import Tuple, List
+﻿import base64
+import re
+import unicodedata
+import urllib.parse
+from typing import List, Tuple
 
 class AdvancedNormalizer:
     HOMOGLYPH_MAP = {

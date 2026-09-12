@@ -7,9 +7,9 @@ from agenttrace.simulation.controller import ControllerStep
 from agenttrace.simulation.proposals import EnrichedProposal, ProposalEngine
 
 
-@dataclass(frozen=True)
+@dataclass
 class WarRoomViewModel:
-    """Read-only presentation model backed by the simulation controller state."""
+    """Presentation model backed by the simulation controller state."""
 
     tick: int
     arena: dict[str, Any]
@@ -38,15 +38,11 @@ def build_warroom_view(step: ControllerStep, max_events: int = 100) -> WarRoomVi
 
     worms = tuple(state.worms)
     defenses = tuple(state.defenses)
-
     recent_events = tuple(state.events[-max_events:]) if max_events > 0 else ()
 
     return WarRoomViewModel(
         tick=state.tick,
-        arena={
-            "worm_count": len(worms),
-            "defense_count": len(defenses),
-        },
+        arena={"worm_count": len(worms), "defense_count": len(defenses)},
         drift={
             "score": state.drift.score,
             "status": state.drift.status,

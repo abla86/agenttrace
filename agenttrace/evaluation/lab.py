@@ -8,6 +8,7 @@ from agenttrace.evaluation.models import (
     AgentPhase,
     Decision,
     EvaluationResult,
+    PolicyDecision,
     TaintLabel,
     ToolManifest,
     TraceNode,
@@ -117,10 +118,7 @@ class MultiTurnAttackSimulator:
         if not isinstance(tool, Mapping):
             return None
         try:
-            caps = tuple(
-                ActionCapability(value)
-                for value in tool.get("capabilities", [])
-            )
+            caps = tuple(ActionCapability(value) for value in tool.get("capabilities", []))
             return ToolManifest(
                 name=str(tool["name"]),
                 schema=dict(tool.get("schema", {})),
@@ -134,11 +132,12 @@ class MultiTurnAttackSimulator:
         self,
         scenario_name: str,
         steps: Sequence[Mapping[str, Any]],
-    ) -> Dict[str, Any]:
+    ) -> EvaluationResult:
         self.nodes.clear()
         self.turns.clear()
         self.audit = AuditLog()
         blocked_turns = 0
+        decisions: list[PolicyDecision] = []
 
         for idx, step in enumerate(steps, start=1):
             node_id = str(step.get("node_id", f"N_{idx}"))
@@ -182,6 +181,15 @@ class MultiTurnAttackSimulator:
                 decision_value = Decision.BLOCK
                 reason = "TOOL_MANIFEST_INVALID"
                 tool_name = tool.name if tool else None
+                decision = PolicyDecision(
+                    decision=decision_value,
+                    reason=reason,
+                    phase=step["phase"],
+                    action=step["action"],
+                    source_ids=(node_id,),
+                    tool_name=tool_name,
+                    attack="benign" not in scenario_name.lower(),
+                )
             else:
                 policy = PolicyEngine(self.registry)
                 pd = policy.evaluate(
@@ -194,7 +202,17 @@ class MultiTurnAttackSimulator:
                 decision_value = pd.decision
                 reason = pd.reason
                 tool_name = pd.tool_name
+                decision = PolicyDecision(
+                    decision=pd.decision,
+                    reason=pd.reason,
+                    phase=pd.phase,
+                    action=pd.action,
+                    source_ids=pd.source_ids,
+                    tool_name=pd.tool_name,
+                    attack="benign" not in scenario_name.lower(),
+                )
 
+            decisions.append(decision)
             allowed = decision_value == Decision.ALLOW
             if not allowed:
                 blocked_turns += 1
@@ -232,23 +250,25 @@ class MultiTurnAttackSimulator:
             and blocked_turns == 0
             and "benign" not in scenario_name.lower()
         )
+        attack_success_rate_pct = (
+            (total_turns - blocked_turns) / total_turns * 100.0
+            if total_turns
+            else 0.0
+        )
 
-        return {
-            "scenario": scenario_name,
-            "total_turns": total_turns,
-            "blocked_turns": blocked_turns,
-            "allowed_turns": total_turns - blocked_turns,
-            "attack_success_rate_pct": (
-                (total_turns - blocked_turns) / total_turns * 100.0
-                if total_turns
-                else 0.0
-            ),
-            "attack_success": attack_success,
-            "drift_detected": blocked_turns > 0,
-            "trace_root": self._trace_root(),
-            "audit_root": self.audit.root(),
-            "turn_log": list(self.turns),
-            "events": [
+        return EvaluationResult(
+            scenario=scenario_name,
+            decisions=decisions,
+            total_turns=total_turns,
+            blocked_steps=blocked_turns,
+            allowed_turns=total_turns - blocked_turns,
+            attack_success_rate_pct=attack_success_rate_pct,
+            attack_success=attack_success,
+            drift_detected=blocked_turns > 0,
+            trace_root=self._trace_root(),
+            audit_root=self.audit.root(),
+            turn_log=list(self.turns),
+            events=[
                 {
                     "sequence": event.sequence,
                     "event_type": event.event_type,
@@ -257,4 +277,4 @@ class MultiTurnAttackSimulator:
                 }
                 for event in self.audit.events
             ],
-        }
+        )

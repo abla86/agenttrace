@@ -32,7 +32,7 @@ class MutationConfig:
         if self.max_mutations_per_tick < 0:
             raise ValueError("max_mutations_per_tick must be non-negative")
 
-
+    
 class MutationEngine:
     def __init__(self, config: MutationConfig | None = None) -> None:
         self.config = config or MutationConfig()
@@ -44,7 +44,6 @@ class MutationEngine:
     def mutate(self, worm: WormState, rng: DeterministicRng, drift_score: float = 0.0) -> tuple[WormState, str] | None:
         if rng.next() > self.mutation_probability(drift_score):
             return None
-
         kind = rng.choice(("speed", "stealth", "aggression"))
         magnitude = round(0.05 + rng.next() * 0.15, 4)
         updated = replace(worm, mutation_level=min(1.0, worm.mutation_level + magnitude))
@@ -87,7 +86,6 @@ class WormEngine:
             worm.y += dy
             worm.energy = max(0.0, worm.energy - 1.0)
             events.append(SimulationEvent(0, "WORM_MOVED", worm.id, details={"x": worm.x, "y": worm.y}))
-
             if mutation_count >= self.mutations.config.max_mutations_per_tick:
                 continue
             result = self.mutations.mutate(worm, self.rng, drift_score)
@@ -95,14 +93,7 @@ class WormEngine:
                 updated, mutation = result
                 self.worms[index] = updated
                 mutation_count += 1
-                events.append(
-                    SimulationEvent(
-                        0,
-                        "WORM_MUTATED",
-                        updated.id,
-                        details={"mutation": mutation, "drift_score": drift_score},
-                    )
-                )
+                events.append(SimulationEvent(0, "WORM_MUTATED", updated.id, details={"mutation": mutation, "drift_score": drift_score}))
         return events
 
 
@@ -161,10 +152,12 @@ class ArenaEngine:
         self.defense = DefenseEngine()
         self.infection = InfectionEngine(self.rng)
         self.sequence = 0
+        self.tick_number = 0
         self.events: list[SimulationEvent] = []
         self.drift_score = 0.0
 
     def tick(self) -> list[SimulationEvent]:
+        self.tick_number += 1
         emitted = self.worms.tick(self.drift_score)
         emitted.extend(self.defense.apply(self.worms.worms))
         emitted.extend(self.infection.tick(self.worms.worms))
@@ -179,4 +172,4 @@ class ArenaEngine:
         self.drift_score = max(0.0, min(100.0, float(drift_score)))
 
     def snapshot(self) -> dict[str, object]:
-        return {"worms": self.worms.worms, "defenses": self.defense.walls, "sequence": self.sequence}
+        return {"worms": self.worms.worms, "defenses": self.defense.walls, "sequence": self.sequence, "tick": self.tick_number}
