@@ -9,7 +9,7 @@ from .policy import SimulationPolicy
 from .proposal_runtime import ProposalDecision, ProposalRuntime
 from .state import SimulationState, build_simulation_state
 from .swarm import SwarmEngine
-from .swarm_entities import SwarmWorldEngine
+from .swarm_entities import Colony, Civilization, SwarmWorldEngine, Territory
 from .threat_runtime import ThreatRuntime, ThreatEvent
 
 
@@ -34,6 +34,26 @@ class SimulationController:
         self.world = SwarmWorldEngine(seed=seed)
         self.threats = ThreatRuntime()
         self.drift = DriftState(0, 0, 0, 0, 0, 0, "STABLE")
+        self.world.territories.append(Territory(id="T-001", x=5.0, y=5.0, radius=10.0))
+        self.world.colonies.append(Colony(id="C-001"))
+        self.world.civilizations.append(Civilization(id="CIV-001", colonies=["C-001"]))
+
+    @property
+    def civilization(self) -> SwarmWorldEngine:
+        """Unified world state exposed for dashboard and integration consumers."""
+        return self.world
+
+    def _sync_colony_membership(self) -> None:
+        if not self.world.colonies:
+            self.world.colonies.append(Colony(id="C-001"))
+        colony = self.world.colonies[0]
+        colony.members = [worm.id for worm in self.arena.worms.worms]
+        if self.world.territories:
+            self.world.territories[0].owner_colony = colony.id
+        if not self.world.civilizations:
+            self.world.civilizations.append(Civilization(id="CIV-001", colonies=[colony.id]))
+        elif colony.id not in self.world.civilizations[0].colonies:
+            self.world.civilizations[0].colonies.append(colony.id)
 
     def _snapshot(self, threat_events: tuple[ThreatEvent, ...] = ()) -> ControllerStep:
         state = build_simulation_state(self.arena, self.drift)
@@ -51,6 +71,7 @@ class SimulationController:
             autonomy_level=self.drift.autonomy_level,
         )
 
+        self._sync_colony_membership()
         self.swarm.tick(
             self.arena.worms.worms,
             self.drift.score,
