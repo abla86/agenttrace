@@ -44,7 +44,15 @@ class AutonomyEngine:
             }
         return None
 
-    def propose(self, state: SimulationState, analysis: dict[str, object] | None) -> DefenseProposal | None:
+    def propose(
+        self,
+        state: SimulationState | DriftState,
+        analysis: dict[str, object] | None = None,
+    ) -> DefenseProposal | None:
+        """Create a proposal from either a full simulation state or a drift snapshot."""
+        drift = state.drift if isinstance(state, SimulationState) else state
+        if analysis is None:
+            analysis = self.analyze(drift)
         if analysis is None:
             return None
         self.sequence += 1
@@ -53,7 +61,7 @@ class AutonomyEngine:
             reason=str(analysis["reason"]),
             action=str(analysis["action"]),
             parameters=dict(analysis["parameters"]),
-            metrics_snapshot=state.drift,
+            metrics_snapshot=drift,
         )
 
     def validate(
