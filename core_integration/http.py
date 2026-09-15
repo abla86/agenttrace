@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import json
+from typing import Any
 
 from starlette.applications import Starlette
 from starlette.requests import Request
@@ -13,16 +13,34 @@ from .policy_server import EvaluationRequest, PolicyService
 service = PolicyService()
 
 
+def _error(message: str) -> JSONResponse:
+    return JSONResponse({"error": message}, status_code=400)
+
+
 async def health(_: Request) -> JSONResponse:
     return JSONResponse({"status": "ok"})
 
 
 async def evaluate(request: Request) -> JSONResponse:
-    body = await request.json()
+    try:
+        body: Any = await request.json()
+    except ValueError:
+        return _error("request body must be valid JSON")
+
+    if not isinstance(body, dict):
+        return _error("request body must be a JSON object")
+
+    tool_name = body.get("tool_name")
+    content = body.get("content")
+    if not isinstance(tool_name, str) or not tool_name.strip():
+        return _error("tool_name must be a non-empty string")
+    if not isinstance(content, str):
+        return _error("content must be a string")
+
     evaluation = service.evaluate(
         EvaluationRequest(
-            tool_name=body["tool_name"],
-            content=body["content"],
+            tool_name=tool_name,
+            content=content,
         )
     )
     decision = evaluation.decision
