@@ -25,7 +25,7 @@ jobs:
 
       - name: Install project
         run: |
-          python -m pip install --upgrade pip
+          python -m pip install --upgrade pip "setuptools>=83"
           python -m pip install -e ".[dev]"
 
       - name: Compile
@@ -38,7 +38,7 @@ jobs:
         run: pytest -q
 
       - name: Bandit
-        run: bandit -q -r agenttrace promptguard core_integration -x tests
+        run: bandit -q -ll -r agenttrace promptguard core_integration -x tests
 
       - name: Dependency audit
         run: pip-audit
