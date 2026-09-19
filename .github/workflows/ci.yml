@@ -47,4 +47,4 @@ jobs:
       - name: Static Security Audit
         run: |
           python -m pip install bandit
-          bandit -q -r agenttrace promptguard -x tests
+          bandit -q -ll -r agenttrace promptguard -x tests
