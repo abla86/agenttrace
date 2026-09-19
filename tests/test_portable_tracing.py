@@ -18,7 +18,8 @@ class Collector:
 
 
 class ExamplePlugin(AgentTracePlugin):
-    pass
+    def plugin_name(self) -> str:
+        return "example"
 
 
 def test_trace_records_events_and_supports_unsubscribe():

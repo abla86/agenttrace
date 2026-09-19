@@ -20,4 +20,11 @@ def connect(trace: AgentTrace, sink: TraceSink) -> Callable[[], None]:
     for state in trace.states:
         sink.push_state(state)
 
-    return trace.subscribe(sink.push_event)
+    unsubscribe_states = trace.subscribe_states(sink.push_state)
+    unsubscribe_events = trace.subscribe(sink.push_event)
+
+    def disconnect() -> None:
+        unsubscribe_states()
+        unsubscribe_events()
+
+    return disconnect
