@@ -41,7 +41,9 @@ jobs:
         run: bandit -q -ll -r agenttrace promptguard core_integration -x tests
 
       - name: Dependency audit
-        run: pip-audit
+        run: |
+          python -m pip install pip-audit
+          pip-audit
 
   helm-security:
     name: Helm and Kubernetes manifest validation
