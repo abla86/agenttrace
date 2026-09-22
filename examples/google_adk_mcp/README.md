@@ -1,83 +1,86 @@
 # Google ADK + MCP + AgentTrace
 
-This example turns the existing **AgentTrace** security core into a concrete
-Google ADK / MCP integration.
+This example is the applied flagship for the Google Cloud agent-security
+learning evidence. It combines a deterministic specialist-agent pipeline with
+an optional Google ADK/MCP runtime boundary.
 
 ## Architecture
 
-```text
-Google ADK agent
-      |
-      | McpToolset / Streamable HTTP
-      v
-MCP policy gateway
-      |
-      v
-AgentTrace
-  |       |       |
-Trace   Policy   Audit
-```
+Review request / PR diff
+        |
+        v
+ADK Orchestrator / Host
+        |
+        +--> Security Agent
+        +--> Dependency Agent
+        +--> Code Quality Agent
+        +--> Test Agent
+        +--> Risk / Feedback Agent
+        |
+        v
+MCP tool boundary
+        |
+        v
+AgentTrace policy gate
+        |
+        +--> Trace
+        +--> Audit
+        |
+        v
+Structured PR review
 
-Google ADK supports multi-agent systems and MCP toolsets, while MCP provides a
-standardized tool boundary between an agent host and external capabilities.
-AgentTrace supplies the application-specific policy, provenance and audit
-layer around that boundary.
+The deterministic implementation lives in agenttrace/agentic/. It is the
+CI-safe reference implementation: no LLM calls, credentials, GitHub writes or
+network access are required.
 
-## Run locally
+The Google ADK adapter remains in adk_agent.py. The MCP gateway in
+policy_server.py is the tool boundary. Specialist-agent output is treated as
+untrusted tool output and cannot, by itself, authorize a privileged write.
 
-Terminal 1:
+## Run the deterministic flagship
 
-```bash
-pip install -e ".[dev]"
-pip install "mcp>=2,<3"
-python examples/google_adk_mcp/policy_server.py
-```
+From the repository root:
 
-Terminal 2:
+    pip install -e ".[dev,google-adk-mcp]"
+    python examples/google_adk_mcp/multi_agent_demo.py
+    pytest -q tests/test_agentic_review.py
 
-```bash
-pip install "google-adk>=1.29.0"
-python examples/google_adk_mcp/adk_agent.py
-```
+The report contains the participating agents, findings, blocked write action,
+trace root and audit root.
 
-The ADK file defines the agent/toolset. The MCP gateway is the component that
-must make the authorization decision before a tool side effect is allowed.
+## Google ADK / MCP runtime
 
-## Security demonstration
+The optional ADK client uses McpToolset with Streamable HTTP. Start the local
+gateway:
 
-A normal read uses `USER_INTENT` and can be allowed.
+    python examples/google_adk_mcp/policy_server.py
 
-A write attributed to `RAG_UNTRUSTED` or `TOOL_OUTPUT_UNTRUSTED` is blocked by
-the existing AgentTrace policy because untrusted data cannot authorize a
-privileged action.
+Then load the ADK agent in an ADK-compatible runner after configuring the
+credentials required by that environment.
 
-The example is deliberately synthetic. It does not connect to GitHub, Google
-Cloud resources, clinical systems, or production databases.
+No production systems are contacted by the example.
 
-## Why this belongs in the portfolio
+## Badge-to-engineering evidence
 
-This is the applied bridge between the Google Cloud learning badges and an
-existing engineering artifact:
+| Learning evidence | Repository evidence |
+|---|---|
+| Introduction to Security Principles in Cloud Computing | capability-aware policy boundary and provenance controls |
+| Strategies for Cloud Security Risk Management | auditable decisions, trace root and audit root |
+| Secure Enterprise AI Agents | specialist agents behind a policy gate; untrusted tool output cannot authorize writes |
+| AI Boost Bites: Your Personal Feedback Agent | structured feedback/report synthesis stage |
+| Build Collaborative Multi-Agent Systems with ADK & MCP | specialist-agent architecture plus ADK/MCP interoperability |
 
-- **Introduction to Security Principles in Cloud Computing** -> explicit
-  policy boundary and least-privilege-style capability checks.
-- **Strategies for Cloud Security Risk Management** -> provenance and auditable
-  risk decisions.
-- **Secure Enterprise AI Agents** -> controlled tool access and audit evidence.
-- **AI Boost Bites: Your Personal Feedback Agent** -> structured agent/tool
-  feedback.
-- **Build Collaborative Multi-Agent Systems with ADK & MCP** -> ADK agent,
-  MCP toolset and interoperable tool boundary.
+These are completion badges/training evidence, not professional Google Cloud
+certifications. The repository implementation is the applied engineering
+evidence.
 
-The badges are training evidence. The repository code is the applied evidence.
+## Verification boundary
 
-## Verification
+The deterministic tests are the source of truth for the flagship security
+logic. The optional ADK/MCP runtime is intentionally separate because it
+requires external SDK/runtime configuration. A passing deterministic test does
+not prove production deployment security.
 
-The repository's normal test suite remains the source of truth for AgentTrace.
-This example should be added to CI once the optional ADK/MCP dependencies are
-available in the runner.
-
-Do not describe this example as production-ready merely because the demo runs.
 Production deployment would additionally require authenticated identities,
-secret management, network controls, observability and deployment-specific
-security testing.
+secret management, network controls, observability, rate limits, deployment
+isolation and deployment-specific security testing.
