@@ -1,0 +1,28 @@
+name: Agentic Security Integration
+
+on:
+  push:
+    branches: ["master", "main"]
+  pull_request:
+    branches: ["master"]
+
+jobs:
+  deterministic-agent-review:
+    name: Multi-agent policy integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install project and agentic dependencies
+        run: |
+          python -m pip install --upgrade pip "setuptools>=83"
+          python -m pip install -e ".[dev,google-adk-mcp]"
+      - name: Lint agentic implementation
+        run: ruff check agenttrace/agentic tests/test_agentic_review.py
+      - name: Run agentic policy tests
+        run: pytest -q tests/test_agentic_review.py
+      - name: Compile integration sources
+        run: python -m compileall -q agenttrace/agentic examples/google_adk_mcp
