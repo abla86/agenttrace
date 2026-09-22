@@ -54,6 +54,10 @@ warroom = [
     "streamlit>=1.32.0",
     "uvicorn>=0.30.0",
 ]
+google-adk-mcp = [
+    "mcp>=2,<3",
+    "google-adk>=1.29.0",
+]
 
 [tool.setuptools.packages.find]
 include = ["agenttrace*", "promptguard*", "core_integration*"]
