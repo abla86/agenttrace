@@ -155,13 +155,18 @@ if REMOTE_BIND and len(API_KEY) < 32:
 
 
 def _parse_manifest(body: Dict[str, Any]) -> ToolManifest:
+    name = str(body["name"]).strip()
+    if not name or len(name) > 200:
+        raise ValueError("tool name must be 1-200 characters")
+    schema = body.get("schema", {})
+    capabilities_raw = body.get("capabilities", [])
+    if not isinstance(schema, dict) or not isinstance(capabilities_raw, list) or len(capabilities_raw) > 32:
+        raise ValueError("invalid tool manifest")
     return ToolManifest(
-        name=str(body["name"]),
-        schema=dict(body.get("schema", {})),
-        capabilities=tuple(
-            ActionCapability(value) for value in body.get("capabilities", [])
-        ),
-        version=str(body.get("version", "1")),
+        name=name,
+        schema=schema,
+        capabilities=tuple(ActionCapability(value) for value in capabilities_raw),
+        version=str(body.get("version", "1"))[:64],
     )
 
 
