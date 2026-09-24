@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
+import os
 import sqlite3
 import time
 from typing import Any, Dict, List
 
 from starlette.applications import Starlette
+from starlette.middleware import Middleware
 from starlette.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.routing import Route
 
 from agenttrace.evaluation.models import (
@@ -127,6 +132,26 @@ class SQLiteTraceStore:
 store = SQLiteTraceStore()
 registry = ToolManifestRegistry()
 nodes_state: Dict[str, TraceNode] = {}
+
+API_KEY = os.getenv("AGENTTRACE_API_KEY", "").strip()
+REMOTE_BIND = os.getenv("AGENTTRACE_ALLOW_REMOTE", "").lower() == "true"
+
+def _authorized(request) -> bool:
+    if not API_KEY:
+        return not REMOTE_BIND
+    supplied = request.headers.get("x-api-key", "")
+    return hmac.compare_digest(supplied, API_KEY)
+
+class GatewayAuthMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        if request.url.path == "/health":
+            return await call_next(request)
+        if not _authorized(request):
+            return JSONResponse({"error": "API authentication required."}, status_code=401)
+        return await call_next(request)
+
+if REMOTE_BIND and len(API_KEY) < 32:
+    raise RuntimeError("AGENTTRACE_API_KEY must be at least 32 characters when remote exposure is enabled.")
 
 
 def _parse_manifest(body: Dict[str, Any]) -> ToolManifest:
@@ -256,4 +281,4 @@ routes = [
     Route("/v1/gateway/audit", list_audit_log, methods=["GET"]),
 ]
 
-app = Starlette(routes=routes)
+app = Starlette(routes=routes, middleware=[Middleware(GatewayAuthMiddleware)])
