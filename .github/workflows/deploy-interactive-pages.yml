@@ -26,7 +26,7 @@ jobs:
           cp -r docs/* _site/
           if [ -f index.html ]; then cp index.html _site/root.html; fi
           touch _site/.nojekyll
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
       - id: deployment
