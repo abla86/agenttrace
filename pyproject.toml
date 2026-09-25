@@ -48,11 +48,11 @@ dev = [
 ]
 web = [
     "starlette>=0.36.0",
-    "uvicorn>=0.30.0",
+    "uvicorn>=0.53.0",
 ]
 warroom = [
     "streamlit>=1.32.0",
-    "uvicorn>=0.30.0",
+    "uvicorn>=0.53.0",
 ]
 google-adk-mcp = [
     "mcp>=2.2.0,<3",
