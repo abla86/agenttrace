@@ -182,6 +182,8 @@ class ReviewOrchestrator:
             schema={"type": "object", "properties": {"comment": {"type": "string"}}},
             capabilities=(ActionCapability.WRITE,),
         )
+        self.lab.registry.register(self._read_tool)
+        self.lab.registry.register(self._write_tool)
 
     def _authorize_read(self, request: ReviewRequest) -> None:
         self.lab.add_node(
