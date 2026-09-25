@@ -43,11 +43,11 @@ dev = [
     "ruff>=0.3.0",
     "mypy>=2.3.1",
     "bandit>=1.9.4",
-    "starlette>=0.36.0",
+    "starlette>=1.6.0",
     "httpx>=0.28.1",
 ]
 web = [
-    "starlette>=0.36.0",
+    "starlette>=1.6.0",
     "uvicorn>=0.53.0",
 ]
 warroom = [
