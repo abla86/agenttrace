@@ -55,7 +55,7 @@ warroom = [
     "uvicorn>=0.30.0",
 ]
 google-adk-mcp = [
-    "mcp>=2,<3",
+    "mcp>=2.2.0,<3",
     "google-adk>=1.29.0",
 ]
 
