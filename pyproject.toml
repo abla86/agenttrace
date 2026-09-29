@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=84.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -40,15 +40,17 @@ agenttrace = "agenttrace.cli:main"
 dev = [
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
-    "ruff>=0.3.0",
+    "ruff>=0.16.9",
     "mypy>=2.3.1",
     "bandit>=1.9.4",
-    "starlette>=1.6.0",
+    "starlette>=1.7.0",
     "httpx>=0.28.1",
 ]
 web = [
     "starlette>=1.6.0",
     "uvicorn>=0.54.0",
+    "starlette>=1.7.0",
+    "uvicorn>=0.53.0",
 ]
 warroom = [
     "streamlit>=1.64.0",
@@ -56,7 +58,7 @@ warroom = [
 ]
 google-adk-mcp = [
     "mcp>=2.2.0,<3",
-    "google-adk>=2.9.2",
+    "google-adk>=2.10.0",
 ]
 
 [tool.setuptools.packages.find]
