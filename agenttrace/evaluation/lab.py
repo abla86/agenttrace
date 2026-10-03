@@ -15,7 +15,6 @@ from agenttrace.evaluation.models import (
 )
 from agenttrace.policy.policy_engine import PolicyEngine
 from agenttrace.policy.tool_registry import ToolManifestRegistry
-from agenttrace.policy.tool_registry import ToolManifestRegistry
 
 
 class EvaluationLab:
@@ -23,8 +22,7 @@ class EvaluationLab:
 
     def __init__(self) -> None:
         self.nodes: Dict[str, TraceNode] = {}
-        self.registry = ToolManifestRegistry()
-        self.policy = PolicyEngine(self.registry)
+        self.policy = PolicyEngine()
         self.audit = AuditLog()
 
     def add_node(
