@@ -42,6 +42,8 @@ dev = [
     "pytest-cov>=7.1.0",
     "ruff>=0.17.1",
     "mypy>=2.3.1",
+    "ruff>=0.16.10",
+    "mypy>=2.4.0",
     "bandit>=1.9.4",
     "starlette>=1.7.0",
     "httpx>=0.28.1",
@@ -51,12 +53,12 @@ web = [
     "uvicorn>=0.54.0",
 ]
 warroom = [
-    "streamlit>=1.64.0",
+    "streamlit>=1.65.0",
     "uvicorn>=0.54.0",
 ]
 google-adk-mcp = [
     "mcp>=2.2.0,<3",
-    "google-adk>=2.10.0",
+    "google-adk>=2.11.0",
 ]
 
 [tool.setuptools.packages.find]
