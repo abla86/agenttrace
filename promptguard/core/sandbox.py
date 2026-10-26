@@ -12,6 +12,8 @@ boundary if untrusted code is ever executed.
 import ast
 from typing import List
 
+from .models import ToolCallEvaluation
+
 FORBIDDEN_CALLS = {
     "eval",
     "exec",
@@ -69,7 +71,7 @@ class ToolCallSandbox:
         self.engine = engine
 
     def validate_tool_call(self, tool_name: str, arguments: dict) -> "ToolCallEvaluation":
-        from .models import ToolCallEvaluation, SecurityViolation, ThreatCategory
+        from .models import SecurityViolation, ThreatCategory
 
         violations = []
         if not isinstance(arguments, dict):
