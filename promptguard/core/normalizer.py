@@ -1,10 +1,11 @@
 import base64
 import binascii
 import re
+from typing import ClassVar
 
 
 class AdvancedNormalizer:
-    HOMOGLYPH_MAP = {
+    HOMOGLYPH_MAP: ClassVar[dict[str, str]] = {
         "а": "a",
         "с": "c",
         "е": "e",
@@ -30,7 +31,7 @@ class AdvancedNormalizer:
         "Ү": "Y",
         "һ": "h",
     }
-    EVIL_UNICODE = re.compile(r"[\u200B-\u200F\uFEFF\u00AD\u2060-\u206F\u202A-\u202E\u180E]")
+    EVIL_UNICODE: ClassVar[re.Pattern[str]] = re.compile(r"[\u200B-\u200F\uFEFF\u00AD\u2060-\u206F\u202A-\u202E\u180E]")
 
     @classmethod
     def clean(cls, text: str) -> tuple[str, bool, bool]:
