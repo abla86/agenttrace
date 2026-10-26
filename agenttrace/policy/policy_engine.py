@@ -1,4 +1,5 @@
 from collections.abc import Iterable
+from typing import ClassVar
 
 from agenttrace.evaluation.models import (
     ActionCapability,
@@ -13,7 +14,7 @@ from agenttrace.policy.tool_registry import ToolManifestRegistry
 
 
 class PolicyEngine:
-    WRITE_CAPABLE = {
+    WRITE_CAPABLE: ClassVar[set[ActionCapability]] = {
         ActionCapability.WRITE,
         ActionCapability.NETWORK,
     }
