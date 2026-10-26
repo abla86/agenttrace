@@ -1,6 +1,7 @@
 import html
 import re
 import secrets
+from typing import ClassVar
 
 from .models import EnforcementAction, SecurityViolation, TaintReport, ThreatCategory, TrustLevel
 from .normalizer import AdvancedNormalizer
@@ -8,11 +9,11 @@ from .semantic import SemanticJailbreakDetector
 
 
 class PromptGuardEngine:
-    DELIMITERS = [r"<\|im_start\|>", r"<\|im_end\|>", r"\[INST\]", r"\[/INST\]", r"```\s*system"]
-    HIJACKS = [
+    DELIMITERS: ClassVar[list[str]] = [r"<\|im_start\|>", r"<\|im_end\|>", r"\[INST\]", r"\[/INST\]", r"```\s*system"]
+    HIJACKS: ClassVar[list[str]] = [
         r"(?i)(?:ignore\s+all\s+previous\s+instructions|system\s*override:|you\s+are\s+now\s+in\s+developer\s+mode)"
     ]
-    EXFILS = [r"!\[.*?\]\(https?://[^\s\)]+[\?&](?:data|token|key)=.*?[\)\s]"]
+    EXFILS: ClassVar[list[str]] = [r"!\[.*?\]\(https?://[^\s\)]+[\?&](?:data|token|key)=.*?[\)\s]"]
 
     def __init__(self):
         self.sem = SemanticJailbreakDetector()
