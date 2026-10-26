@@ -173,3 +173,12 @@ MIT
 ## Safety and verification
 
 AgentTrace is deterministic by design. Public demonstrations should use synthetic traces and must not imply that external tools, systems, or production agents were contacted.
+
+
+## Disclaimers and limitations
+
+- **Project status:** Features may be incomplete, experimental, or unverified. Confirm behavior against the current code, tests, and configuration before relying on it.
+- **No warranty:** Provided as-is, without guarantees of correctness, availability, security, or production readiness. Review and test changes before production use.
+- **Security and data:** Never commit credentials, API keys, personal information, or confidential data. Review permissions, external services, logging, retention, and dependency risks. Automated checks are not a complete security audit.
+- **Testing and deployment:** Passing tests or static checks does not prove all behavior is correct or deployment is safe. Verify functionality, access controls, dependencies, backups, monitoring, and operational requirements independently.
+- **Domain-specific limitation:** Tracing and observability data can contain secrets, personal data or sensitive prompts. Configure redaction, access controls and retention deliberately; traces or dashboards do not by themselves prove that an agent behaved correctly or safely.
