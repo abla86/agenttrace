@@ -1,6 +1,6 @@
 ﻿import unittest
 
-from agenttrace.audit.audit_log import AuditLog, merkle_root
+from agenttrace.audit.audit_log import AuditLog
 from agenttrace.evaluation.lab import EvaluationLab
 from agenttrace.evaluation.models import (
     ActionCapability,

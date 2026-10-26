@@ -1,6 +1,8 @@
 import unittest
+
 from agenttrace.evaluation.models import ActionCapability, ToolManifest
 from agenttrace.policy.merkle_registry import MerkleToolRegistry
+
 
 class MerkleToolRegistryTests(unittest.TestCase):
     def test_manifest_capability_change_changes_root(self):

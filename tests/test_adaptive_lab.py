@@ -1,7 +1,9 @@
 import unittest
-from agenttrace.evaluation.models import ActionCapability,AgentPhase,TaintLabel,TraceNode
+
+from agenttrace.evaluation.models import ActionCapability, AgentPhase, TaintLabel, TraceNode
 from agenttrace.policy.policy_engine import PolicyEngine
 from agenttrace.scenarios import AdaptiveScenarioGenerator
+
 
 class AdaptiveLabTests(unittest.TestCase):
     def setUp(self): self.policy=PolicyEngine()

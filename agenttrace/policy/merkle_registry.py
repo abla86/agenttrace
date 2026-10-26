@@ -1,8 +1,11 @@
 from __future__ import annotations
+
 import hashlib
 import json
-from typing import Iterable
+from collections.abc import Iterable
+
 from agenttrace.evaluation.models import ToolManifest
+
 
 class MerkleToolRegistry:
     """Tamper-evident snapshot of registered tool manifests."""

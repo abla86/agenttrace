@@ -10,7 +10,6 @@ boundary if untrusted code is ever executed.
 """
 
 import ast
-from typing import List
 
 from .models import ToolCallEvaluation
 
@@ -29,8 +28,8 @@ FORBIDDEN_MODULES = {
 }
 
 
-def inspect_python(code: str) -> List[str]:
-    findings: List[str] = []
+def inspect_python(code: str) -> list[str]:
+    findings: list[str] = []
 
     try:
         tree = ast.parse(code)

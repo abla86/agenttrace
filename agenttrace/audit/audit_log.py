@@ -1,7 +1,7 @@
 ﻿import hashlib
 import json
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable, List
 
 
 def sha256(data: bytes) -> str:
@@ -29,7 +29,7 @@ class AuditEvent:
 
 
 def merkle_root(leaves: Iterable[str]) -> str:
-    level: List[str] = list(leaves)
+    level: list[str] = list(leaves)
 
     if not level:
         return sha256(b"")
@@ -51,7 +51,7 @@ def merkle_root(leaves: Iterable[str]) -> str:
 
 class AuditLog:
     def __init__(self) -> None:
-        self.events: List[AuditEvent] = []
+        self.events: list[AuditEvent] = []
 
     def append(self, event_type: str, payload: dict) -> AuditEvent:
         event = AuditEvent(

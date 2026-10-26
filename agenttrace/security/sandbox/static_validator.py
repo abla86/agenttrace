@@ -10,7 +10,6 @@ Real isolation must be provided by an OS/container/VM boundary.
 
 import ast
 
-
 FORBIDDEN_IMPORTS = {
     "os",
     "subprocess",

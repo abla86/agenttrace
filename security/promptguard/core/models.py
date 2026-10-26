@@ -1,6 +1,7 @@
 ﻿from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any
+
 
 class TrustLevel(Enum):
     TRUSTED_SYSTEM = 0
@@ -36,11 +37,11 @@ class TaintReport:
     boundary_token: str
     max_risk: float
     trust_level: TrustLevel
-    violations: List[SecurityViolation] = field(default_factory=list)
+    violations: list[SecurityViolation] = field(default_factory=list)
 
 @dataclass
 class ToolCallEvaluation:
     is_valid: bool
     tool_name: str
-    sanitized_arguments: Dict[str, Any]
-    violations: List[SecurityViolation] = field(default_factory=list)
+    sanitized_arguments: dict[str, Any]
+    violations: list[SecurityViolation] = field(default_factory=list)

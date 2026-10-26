@@ -1,7 +1,8 @@
-from .evaluation.models import ActionCapability,AgentPhase,TaintLabel,TraceNode,ToolManifest
-from .policy.policy_engine import PolicyEngine
+from .evaluation.models import ActionCapability, AgentPhase, TaintLabel, ToolManifest, TraceNode
 from .policy.merkle_registry import MerkleToolRegistry
+from .policy.policy_engine import PolicyEngine
 from .scenarios import AdaptiveScenarioGenerator
+
 
 def run():
     p=PolicyEngine(); c={}

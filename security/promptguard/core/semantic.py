@@ -1,7 +1,6 @@
 import hashlib
 import math
 import re
-from typing import List, Optional, Tuple
 
 
 class FastSemanticEmbedder:
@@ -18,7 +17,7 @@ class FastSemanticEmbedder:
         ).digest()
         return int.from_bytes(digest, "big") % self.dim
 
-    def embed(self, text: str) -> List[float]:
+    def embed(self, text: str) -> list[float]:
         clean = re.sub(r"[^\w\s]", "", text.lower())
         tokens = clean.split()
         vec = [0.0] * self.dim
@@ -39,7 +38,7 @@ class FastSemanticEmbedder:
         return [x / norm for x in vec] if norm else vec
 
     @staticmethod
-    def sim(v1: List[float], v2: List[float]) -> float:
+    def sim(v1: list[float], v2: list[float]) -> float:
         return max(0.0, min(1.0, sum(a * b for a, b in zip(v1, v2))))
 
 
@@ -55,7 +54,7 @@ class SemanticJailbreakDetector:
         self.threshold = threshold
         self.seed_vecs = [(seed, self.emb.embed(seed)) for seed in self.SEEDS]
 
-    def check(self, text: str) -> Tuple[float, Optional[str]]:
+    def check(self, text: str) -> tuple[float, str | None]:
         vector = self.emb.embed(text)
         best_sim, best_seed = 0.0, None
         for seed, seed_vector in self.seed_vecs:

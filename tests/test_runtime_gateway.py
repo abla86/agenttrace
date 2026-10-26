@@ -1,7 +1,9 @@
 ﻿import unittest
-import json
+
 from starlette.testclient import TestClient
-from agenttrace.runtime.gateway import app, store
+
+from agenttrace.runtime.gateway import app
+
 
 class TestRuntimeGateway(unittest.TestCase):
     def setUp(self):

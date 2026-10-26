@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Dict
 
 from agenttrace.evaluation.models import ActionCapability, ToolManifest
 
@@ -11,7 +10,7 @@ class ToolManifestRegistry:
     """Deterministic registry for tool-manifest integrity."""
 
     def __init__(self) -> None:
-        self._manifests: Dict[str, str] = {}
+        self._manifests: dict[str, str] = {}
 
     @staticmethod
     def _canonical(manifest: ToolManifest) -> bytes:

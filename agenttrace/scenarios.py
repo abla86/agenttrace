@@ -1,8 +1,10 @@
+import hashlib
 from dataclasses import dataclass
 from enum import Enum
 from random import Random
-import hashlib
+
 from .evaluation.models import ActionCapability, AgentPhase, TaintLabel
+
 
 class AttackType(str, Enum):
     INDIRECT_INJECTION="INDIRECT_INJECTION"

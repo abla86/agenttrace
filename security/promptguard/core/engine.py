@@ -1,8 +1,11 @@
-﻿import html, re, secrets
-from typing import List
-from .models import TrustLevel, ThreatCategory, EnforcementAction, SecurityViolation, TaintReport
+﻿import html
+import re
+import secrets
+
+from .models import EnforcementAction, SecurityViolation, TaintReport, ThreatCategory, TrustLevel
 from .normalizer import AdvancedNormalizer
 from .semantic import SemanticJailbreakDetector
+
 
 class PromptGuardEngine:
     DELIMITERS = [r"<\|im_start\|>", r"<\|im_end\|>", r"\[INST\]", r"\[/INST\]", r"```\s*system"]
@@ -13,7 +16,7 @@ class PromptGuardEngine:
         self.sem = SemanticJailbreakDetector()
 
     def inspect_and_contain(self, raw_text: str, trust: TrustLevel = TrustLevel.UNTRUSTED_EXTERNAL) -> TaintReport:
-        violations: List[SecurityViolation] = []
+        violations: list[SecurityViolation] = []
         cleaned, had_zw, had_homo = AdvancedNormalizer.clean(raw_text)
         
         if had_zw or had_homo:
@@ -22,13 +25,13 @@ class PromptGuardEngine:
         layers = [("raw", cleaned)] + AdvancedNormalizer.recursive_decode(cleaned)
         for lname, ltext in layers:
             for d in self.DELIMITERS:
-                if re.search(d, ltext, re.I):
+                if re.search(d, ltext, re.IGNORECASE):
                     violations.append(SecurityViolation(ThreatCategory.SPECIAL_TOKEN_INJECTION, "DELIM-01", 1.0, f"Token fluktforsøk ({lname})", d))
             for h in self.HIJACKS:
-                if re.search(h, ltext, re.I):
+                if re.search(h, ltext, re.IGNORECASE):
                     violations.append(SecurityViolation(ThreatCategory.INDIRECT_ROLE_HIJACK, "HIJACK-01", 0.95, f"Instruksjonsoverstyring ({lname})", h))
             for e in self.EXFILS:
-                if re.search(e, ltext, re.I):
+                if re.search(e, ltext, re.IGNORECASE):
                     violations.append(SecurityViolation(ThreatCategory.MARKDOWN_EXFILTRATION, "EXFIL-01", 0.90, "Markdown eksfiltrering", e))
 
         sim, seed = self.sem.check(cleaned)

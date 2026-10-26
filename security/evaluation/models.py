@@ -1,7 +1,7 @@
+import hashlib
 from dataclasses import dataclass, field
 from enum import Enum
-import hashlib
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 
 class TaintLabel(str, Enum):
@@ -34,7 +34,7 @@ class TraceNode:
     node_id: str
     taint: TaintLabel
     content: str
-    parent_ids: Tuple[str, ...] = ()
+    parent_ids: tuple[str, ...] = ()
 
     @property
     def node_hash(self) -> str:
@@ -48,8 +48,8 @@ class TraceNode:
 @dataclass(frozen=True)
 class ToolManifest:
     name: str
-    schema: Dict[str, Any]
-    capabilities: Tuple[ActionCapability, ...]
+    schema: dict[str, Any]
+    capabilities: tuple[ActionCapability, ...]
     version: str = "1"
 
 
@@ -59,14 +59,14 @@ class PolicyDecision:
     reason: str
     phase: AgentPhase
     action: ActionCapability
-    source_ids: Tuple[str, ...]
-    tool_name: Optional[str] = None
+    source_ids: tuple[str, ...]
+    tool_name: str | None = None
 
 
 @dataclass
 class EvaluationResult:
     scenario: str
-    decisions: List[PolicyDecision] = field(default_factory=list)
+    decisions: list[PolicyDecision] = field(default_factory=list)
 
     @property
     def blocked(self) -> int:

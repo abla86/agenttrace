@@ -3,8 +3,7 @@ from __future__ import annotations
 import json
 import sqlite3
 import time
-from dataclasses import asdict
-from typing import Any, Dict, List
+from typing import Any
 
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
@@ -73,7 +72,7 @@ class SQLiteTraceStore:
             )
             conn.commit()
 
-    def get_recent_traces(self, limit: int = 50) -> List[Dict[str, Any]]:
+    def get_recent_traces(self, limit: int = 50) -> list[dict[str, Any]]:
         limit = max(1, min(limit, 500))
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
@@ -85,10 +84,10 @@ class SQLiteTraceStore:
 
 store = SQLiteTraceStore()
 registry = ToolManifestRegistry()
-nodes_state: Dict[str, TraceNode] = {}
+nodes_state: dict[str, TraceNode] = {}
 
 
-def _parse_manifest(body: Dict[str, Any]) -> ToolManifest:
+def _parse_manifest(body: dict[str, Any]) -> ToolManifest:
     return ToolManifest(
         name=str(body["name"]),
         schema=dict(body.get("schema", {})),

@@ -1,4 +1,4 @@
-﻿from typing import Dict, Iterable, Tuple
+﻿from collections.abc import Iterable
 
 from agenttrace.evaluation.models import (
     ActionCapability,
@@ -24,7 +24,7 @@ class PolicyEngine:
 
     def evaluate(
         self,
-        nodes: Dict[str, TraceNode],
+        nodes: dict[str, TraceNode],
         phase: AgentPhase,
         action: ActionCapability,
         source_ids: Iterable[str],
