@@ -1,4 +1,8 @@
-﻿import re, unicodedata, urllib.parse, base64
+﻿import base64
+import binascii
+import re
+import unicodedata
+import urllib.parse
 from typing import Tuple, List
 
 class AdvancedNormalizer:
@@ -35,8 +39,8 @@ class AdvancedNormalizer:
                         if any(k in dec.lower() for k in ["ignore", "system", "http", "curl"]):
                             layers.append((f"base64_{enc}", dec))
                             break
-                    except Exception:
+                    except UnicodeDecodeError:
                         continue
-            except Exception:
+            except (binascii.Error, ValueError):
                 continue
         return layers
