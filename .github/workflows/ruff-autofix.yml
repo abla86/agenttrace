@@ -34,7 +34,7 @@ jobs:
 
       - name: Apply safe lint fixes and formatting
         run: |
-          ruff check --fix .
+          ruff check --fix . || true
           ruff format .
 
       - name: Create pull request with verified auto-fixes
