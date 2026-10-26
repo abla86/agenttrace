@@ -1,20 +1,39 @@
-﻿import base64
+import base64
 import binascii
 import re
-import unicodedata
-import urllib.parse
-from typing import Tuple, List
+
 
 class AdvancedNormalizer:
     HOMOGLYPH_MAP = {
-        'а': 'a', 'с': 'c', 'е': 'e', 'о': 'o', 'р': 'p', 'ѕ': 's', 'х': 'x', 'у': 'y',
-        'А': 'A', 'В': 'B', 'С': 'C', 'Е': 'E', 'Н': 'H', 'І': 'I', 'Ј': 'J', 'К': 'K',
-        'М': 'M', 'О': 'O', 'Р': 'P', 'Ѕ': 'S', 'Т': 'T', 'Х': 'X', 'Ү': 'Y', 'һ': 'h'
+        "а": "a",
+        "с": "c",
+        "е": "e",
+        "о": "o",
+        "р": "p",
+        "ѕ": "s",
+        "х": "x",
+        "у": "y",
+        "А": "A",
+        "В": "B",
+        "С": "C",
+        "Е": "E",
+        "Н": "H",
+        "І": "I",
+        "Ј": "J",
+        "К": "K",
+        "М": "M",
+        "О": "O",
+        "Р": "P",
+        "Ѕ": "S",
+        "Т": "T",
+        "Х": "X",
+        "Ү": "Y",
+        "һ": "h",
     }
     EVIL_UNICODE = re.compile(r"[\u200B-\u200F\uFEFF\u00AD\u2060-\u206F\u202A-\u202E\u180E]")
 
     @classmethod
-    def clean(cls, text: str) -> Tuple[str, bool, bool]:
+    def clean(cls, text: str) -> tuple[str, bool, bool]:
         cleaned, count = cls.EVIL_UNICODE.subn("", text)
         chars = []
         had_homo = False
@@ -27,7 +46,7 @@ class AdvancedNormalizer:
         return "".join(chars), count > 0, had_homo
 
     @classmethod
-    def recursive_decode(cls, text: str) -> List[Tuple[str, str]]:
+    def recursive_decode(cls, text: str) -> list[tuple[str, str]]:
         layers = []
         b64_matches = re.findall(r"[A-Za-z0-9+/=]{20,}", text)
         for m in b64_matches:

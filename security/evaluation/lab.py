@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable, List, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from agenttrace.audit.audit_log import AuditLog, merkle_root
 from agenttrace.evaluation.models import (
@@ -20,7 +21,7 @@ class EvaluationLab:
     """Deterministic policy evaluation lab with auditable trace events."""
 
     def __init__(self) -> None:
-        self.nodes: Dict[str, TraceNode] = {}
+        self.nodes: dict[str, TraceNode] = {}
         self.policy = PolicyEngine()
         self.audit = AuditLog()
 
@@ -85,8 +86,8 @@ class MultiTurnAttackSimulator:
     """Runs bounded attack scenarios without executing attack payloads."""
 
     def __init__(self) -> None:
-        self.nodes: Dict[str, TraceNode] = {}
-        self.turns: List[Dict[str, Any]] = []
+        self.nodes: dict[str, TraceNode] = {}
+        self.turns: list[dict[str, Any]] = []
         self.registry = ToolManifestRegistry()
 
     def _trace_root(self) -> str:
@@ -118,7 +119,7 @@ class MultiTurnAttackSimulator:
         self,
         scenario_name: str,
         steps: Sequence[Mapping[str, Any]],
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         self.nodes.clear()
         self.turns.clear()
         blocked_turns = 0
@@ -171,9 +172,7 @@ class MultiTurnAttackSimulator:
             )
 
         attack_success = (
-            bool(self.turns)
-            and blocked_turns == 0
-            and "benign" not in scenario_name.lower()
+            bool(self.turns) and blocked_turns == 0 and "benign" not in scenario_name.lower()
         )
         total_turns = len(self.turns)
         return {
@@ -182,9 +181,7 @@ class MultiTurnAttackSimulator:
             "blocked_turns": blocked_turns,
             "allowed_turns": total_turns - blocked_turns,
             "attack_success_rate_pct": (
-                (total_turns - blocked_turns) / total_turns * 100.0
-                if total_turns
-                else 0.0
+                (total_turns - blocked_turns) / total_turns * 100.0 if total_turns else 0.0
             ),
             "attack_success": attack_success,
             "drift_detected": blocked_turns > 0,

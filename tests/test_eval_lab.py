@@ -1,4 +1,4 @@
-﻿import unittest
+import unittest
 
 from agenttrace.evaluation.lab import (
     ActionCapability,
@@ -11,7 +11,6 @@ from agenttrace.evaluation.lab import (
 
 
 class TestAgentEvaluationLab(unittest.TestCase):
-
     def test_merkle_root_changes_when_leaf_changes(self):
         root_a = merkle_root(["a", "b", "c"])
         root_b = merkle_root(["a", "X", "c"])

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Static code inspection only.
 
 IMPORTANT:
@@ -10,7 +10,6 @@ boundary if untrusted code is ever executed.
 """
 
 import ast
-from typing import List
 
 from .models import ToolCallEvaluation
 
@@ -29,8 +28,8 @@ FORBIDDEN_MODULES = {
 }
 
 
-def inspect_python(code: str) -> List[str]:
-    findings: List[str] = []
+def inspect_python(code: str) -> list[str]:
+    findings: list[str] = []
 
     try:
         tree = ast.parse(code)
@@ -38,7 +37,6 @@ def inspect_python(code: str) -> List[str]:
         return [f"SYNTAX_ERROR:{exc.msg}"]
 
     for node in ast.walk(tree):
-
         if isinstance(node, ast.Call):
             if isinstance(node.func, ast.Name):
                 if node.func.id in FORBIDDEN_CALLS:
@@ -46,9 +44,7 @@ def inspect_python(code: str) -> List[str]:
 
             elif isinstance(node.func, ast.Attribute):
                 if node.func.attr in {"system", "popen", "spawn"}:
-                    findings.append(
-                        f"FORBIDDEN_ATTRIBUTE_CALL:{node.func.attr}"
-                    )
+                    findings.append(f"FORBIDDEN_ATTRIBUTE_CALL:{node.func.attr}")
 
         elif isinstance(node, ast.Import):
             for alias in node.names:

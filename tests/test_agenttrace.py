@@ -1,6 +1,6 @@
-﻿import unittest
+import unittest
 
-from agenttrace.audit.audit_log import AuditLog, merkle_root
+from agenttrace.audit.audit_log import AuditLog
 from agenttrace.evaluation.lab import EvaluationLab
 from agenttrace.evaluation.models import (
     ActionCapability,
@@ -13,7 +13,6 @@ from agenttrace.policy.tool_registry import ToolManifestRegistry
 
 
 class TestAgentTrace(unittest.TestCase):
-
     def test_benign_execution_allowed(self):
         lab = EvaluationLab()
 
