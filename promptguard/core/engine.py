@@ -1,3 +1,6 @@
+﻿import html
+import re
+import secrets
 import html
 import re
 import secrets
@@ -18,6 +21,7 @@ class PromptGuardEngine:
     def __init__(self):
         self.sem = SemanticJailbreakDetector()
 
+    def inspect_and_contain(self, raw_text: str, trust: TrustLevel = TrustLevel.UNTRUSTED_EXTERNAL) -> TaintReport:
     def inspect_and_contain(
         self, raw_text: str, trust: TrustLevel = TrustLevel.UNTRUSTED_EXTERNAL
     ) -> TaintReport:
@@ -39,6 +43,13 @@ class PromptGuardEngine:
         for lname, ltext in layers:
             for d in self.DELIMITERS:
                 if re.search(d, ltext, re.IGNORECASE):
+                    violations.append(SecurityViolation(ThreatCategory.SPECIAL_TOKEN_INJECTION, "DELIM-01", 1.0, f"Token fluktforsøk ({lname})", d))
+            for h in self.HIJACKS:
+                if re.search(h, ltext, re.IGNORECASE):
+                    violations.append(SecurityViolation(ThreatCategory.INDIRECT_ROLE_HIJACK, "HIJACK-01", 0.95, f"Instruksjonsoverstyring ({lname})", h))
+            for e in self.EXFILS:
+                if re.search(e, ltext, re.IGNORECASE):
+                    violations.append(SecurityViolation(ThreatCategory.MARKDOWN_EXFILTRATION, "EXFIL-01", 0.90, "Markdown eksfiltrering", e))
                     violations.append(
                         SecurityViolation(
                             ThreatCategory.SPECIAL_TOKEN_INJECTION,
