@@ -1,6 +1,5 @@
 from collections.abc import Iterable
 from typing import ClassVar
-from typing import ClassVar
 
 from agenttrace.evaluation.models import (
     ActionCapability,
