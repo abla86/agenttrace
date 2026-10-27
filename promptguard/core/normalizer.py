@@ -2,6 +2,7 @@ import base64
 import binascii
 import re
 from typing import ClassVar
+from typing import ClassVar
 
 
 class AdvancedNormalizer:
