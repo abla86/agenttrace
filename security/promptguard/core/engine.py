@@ -2,7 +2,6 @@ import html
 import re
 import secrets
 from typing import ClassVar
-from typing import ClassVar
 
 from .models import EnforcementAction, SecurityViolation, TaintReport, ThreatCategory, TrustLevel
 from .normalizer import AdvancedNormalizer
