@@ -57,8 +57,8 @@ class TestAgentEvaluationLab(unittest.TestCase):
             ],
         )
 
-        self.assertEqual(result.blocked_steps, 1)
-        self.assertFalse(result.attack_success)
+        self.assertEqual(result["blocked_turns"], 1)
+        self.assertFalse(result["attack_success"])
 
     def test_secret_network_flow_blocked(self):
         sim = MultiTurnAttackSimulator()
@@ -75,8 +75,8 @@ class TestAgentEvaluationLab(unittest.TestCase):
             ],
         )
 
-        self.assertEqual(result.blocked_steps, 1)
-        self.assertFalse(result.attack_success)
+        self.assertEqual(result["blocked_turns"], 1)
+        self.assertFalse(result["attack_success"])
 
     def test_phase_escalation_blocked(self):
         sim = MultiTurnAttackSimulator()
@@ -93,7 +93,7 @@ class TestAgentEvaluationLab(unittest.TestCase):
             ],
         )
 
-        self.assertEqual(result.blocked_steps, 1)
+        self.assertEqual(result["blocked_turns"], 1)
 
     def test_tool_manifest_drift_detected(self):
         registry = ToolManifestRegistry()
