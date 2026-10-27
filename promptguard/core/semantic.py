@@ -2,7 +2,6 @@ import hashlib
 import math
 import re
 from typing import ClassVar
-from typing import ClassVar
 
 
 class FastSemanticEmbedder:
