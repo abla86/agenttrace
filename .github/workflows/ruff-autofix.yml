@@ -1,27 +1,20 @@
-name: Ruff Autofix
+name: Ruff Lint Verification
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: write
-
-concurrency:
-  group: ruff-autofix-${{ github.ref }}
-  cancel-in-progress: true
+  contents: read
 
 jobs:
-  autofix:
-    if: github.actor != 'github-actions[bot]'
+  lint:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v7
         with:
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -31,21 +24,7 @@ jobs:
       - name: Install Ruff
         run: python -m pip install --disable-pip-version-check ruff
 
-      - name: Apply safe lint fixes and formatting
+      - name: Check lint and formatting
         run: |
-          ruff check --fix . || true
-          ruff format .
-
-      - name: Publish fixes to the open automation branch
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ -z "$(git status --porcelain)" ]]; then
-            echo "No Ruff changes required."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- '*.py'
-          git commit -m "fix: apply safe Ruff autofixes"
-          git push origin HEAD:automation/ruff-autofix
+          ruff check .
+          ruff format --check .

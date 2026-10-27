@@ -29,9 +29,7 @@ def test_homoglyph_attack(engine):
     )
     assert rep.is_safe is False
     assert rep.action == EnforcementAction.BLOCK
-    assert any(
-        v.category == ThreatCategory.HOMOGLYPH_OBFUSCATION for v in rep.violations
-    )
+    assert any(v.category == ThreatCategory.HOMOGLYPH_OBFUSCATION for v in rep.violations)
 
 
 def test_token_injection(engine):
@@ -49,10 +47,7 @@ def test_ast_sandbox_blocks_dangerous_code(sandbox):
         {"code": "import os\nos.system('rm -rf /')"},
     )
     assert res.is_valid is False
-    assert any(
-        v.category == ThreatCategory.UNSAFE_CODE_EXECUTION
-        for v in res.violations
-    )
+    assert any(v.category == ThreatCategory.UNSAFE_CODE_EXECUTION for v in res.violations)
 
 
 def test_ast_sandbox_allows_inert_code(sandbox):

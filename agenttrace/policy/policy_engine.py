@@ -1,4 +1,5 @@
-﻿from typing import Dict, Iterable, Tuple
+from collections.abc import Iterable
+from typing import ClassVar
 
 from agenttrace.evaluation.models import (
     ActionCapability,
@@ -13,8 +14,7 @@ from agenttrace.policy.tool_registry import ToolManifestRegistry
 
 
 class PolicyEngine:
-
-    WRITE_CAPABLE = {
+    WRITE_CAPABLE: ClassVar[set[ActionCapability]] = {
         ActionCapability.WRITE,
         ActionCapability.NETWORK,
     }
@@ -24,7 +24,7 @@ class PolicyEngine:
 
     def evaluate(
         self,
-        nodes: Dict[str, TraceNode],
+        nodes: dict[str, TraceNode],
         phase: AgentPhase,
         action: ActionCapability,
         source_ids: Iterable[str],
@@ -67,7 +67,8 @@ class PolicyEngine:
                 )
 
             if (
-                node.taint in {
+                node.taint
+                in {
                     TaintLabel.RAG_UNTRUSTED,
                     TaintLabel.TOOL_OUTPUT_UNTRUSTED,
                 }
@@ -82,10 +83,7 @@ class PolicyEngine:
                     tool.name if tool else None,
                 )
 
-            if (
-                node.taint == TaintLabel.INTERNAL_SECRET
-                and action == ActionCapability.NETWORK
-            ):
+            if node.taint == TaintLabel.INTERNAL_SECRET and action == ActionCapability.NETWORK:
                 return PolicyDecision(
                     Decision.BLOCK,
                     "SECRET_TO_NETWORK_FLOW_DENIED",

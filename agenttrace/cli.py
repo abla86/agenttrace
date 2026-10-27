@@ -3,8 +3,6 @@ import json
 
 from .evaluation.models import (
     ActionCapability,
-    AgentPhase,
-    TaintLabel,
     ToolManifest,
     TraceNode,
 )
@@ -40,9 +38,7 @@ def demo():
                     "attack_type": step.attack_type.value,
                     "mutation": mutation,
                     "decision": "ALLOW" if allowed else "BLOCK",
-                    "reason": "TOOL_INTEGRITY_OK"
-                    if allowed
-                    else "TOOL_MANIFEST_INVALID",
+                    "reason": "TOOL_INTEGRITY_OK" if allowed else "TOOL_MANIFEST_INVALID",
                 }
             )
             continue
@@ -71,9 +67,7 @@ def demo():
         "events": events,
         "total": len(events),
         "blocked": blocked,
-        "attack_success_rate_pct": (
-            (len(events) - blocked) / len(events) * 100 if events else 0
-        ),
+        "attack_success_rate_pct": ((len(events) - blocked) / len(events) * 100 if events else 0),
     }
 
 

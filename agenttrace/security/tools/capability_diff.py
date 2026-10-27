@@ -1,13 +1,12 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import FrozenSet
 
 
 @dataclass(frozen=True)
 class CapabilityDiff:
-    added: FrozenSet[str]
-    removed: FrozenSet[str]
+    added: frozenset[str]
+    removed: frozenset[str]
 
     @property
     def changed(self) -> bool:

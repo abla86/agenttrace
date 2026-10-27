@@ -3,8 +3,7 @@ from __future__ import annotations
 import json
 import sqlite3
 import time
-from dataclasses import asdict
-from typing import Any, Dict, List
+from typing import Any
 
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
@@ -73,7 +72,7 @@ class SQLiteTraceStore:
             )
             conn.commit()
 
-    def get_recent_traces(self, limit: int = 50) -> List[Dict[str, Any]]:
+    def get_recent_traces(self, limit: int = 50) -> list[dict[str, Any]]:
         limit = max(1, min(limit, 500))
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
@@ -85,16 +84,14 @@ class SQLiteTraceStore:
 
 store = SQLiteTraceStore()
 registry = ToolManifestRegistry()
-nodes_state: Dict[str, TraceNode] = {}
+nodes_state: dict[str, TraceNode] = {}
 
 
-def _parse_manifest(body: Dict[str, Any]) -> ToolManifest:
+def _parse_manifest(body: dict[str, Any]) -> ToolManifest:
     return ToolManifest(
         name=str(body["name"]),
         schema=dict(body.get("schema", {})),
-        capabilities=tuple(
-            ActionCapability(value) for value in body.get("capabilities", [])
-        ),
+        capabilities=tuple(ActionCapability(value) for value in body.get("capabilities", [])),
         version=str(body.get("version", "1")),
     )
 
@@ -104,9 +101,7 @@ async def register_tool(request):
         body = await request.json()
         manifest = _parse_manifest(body)
         fingerprint = registry.register(manifest)
-        return JSONResponse(
-            {"registered": True, "tool": manifest.name, "fingerprint": fingerprint}
-        )
+        return JSONResponse({"registered": True, "tool": manifest.name, "fingerprint": fingerprint})
     except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
         return JSONResponse({"error": str(exc)}, status_code=400)
 
@@ -130,8 +125,7 @@ async def intercept_tool_call(request):
                 name=str(tool_name),
                 schema=dict(body.get("schema", {})),
                 capabilities=tuple(
-                    ActionCapability(value)
-                    for value in body.get("capabilities", [action.value])
+                    ActionCapability(value) for value in body.get("capabilities", [action.value])
                 ),
                 version=str(body.get("version", "1")),
             )
