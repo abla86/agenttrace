@@ -1,4 +1,4 @@
-﻿"""
+"""
 Security note:
 
 This module is NOT a secure arbitrary-code execution sandbox.
@@ -34,7 +34,6 @@ def inspect_python(code: str) -> list[str]:
         return [f"SYNTAX_ERROR:{exc.msg}"]
 
     for node in ast.walk(tree):
-
         if isinstance(node, ast.Import):
             for alias in node.names:
                 root = alias.name.split(".")[0]
@@ -47,15 +46,10 @@ def inspect_python(code: str) -> list[str]:
                 findings.append(f"FORBIDDEN_IMPORT:{root}")
 
         elif isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Name) and node.func.id in FORBIDDEN_CALLS:
+                findings.append(f"FORBIDDEN_CALL:{node.func.id}")
 
-            if isinstance(node.func, ast.Name):
-                if node.func.id in FORBIDDEN_CALLS:
-                    findings.append(f"FORBIDDEN_CALL:{node.func.id}")
-
-            if isinstance(node.func, ast.Attribute):
-                if node.func.attr in {"system", "popen", "spawn"}:
-                    findings.append(
-                        f"FORBIDDEN_ATTRIBUTE_CALL:{node.func.attr}"
-                    )
+            if isinstance(node.func, ast.Attribute) and node.func.attr in {"system", "popen", "spawn"}:
+                findings.append(f"FORBIDDEN_ATTRIBUTE_CALL:{node.func.attr}")
 
     return findings

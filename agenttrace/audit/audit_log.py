@@ -1,4 +1,4 @@
-﻿import hashlib
+import hashlib
 import json
 from collections.abc import Iterable
 from dataclasses import dataclass

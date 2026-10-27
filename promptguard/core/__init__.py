@@ -1,1 +1,1 @@
-﻿
+"""Core PromptGuard engine components."""

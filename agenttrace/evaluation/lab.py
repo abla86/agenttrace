@@ -171,22 +171,20 @@ class MultiTurnAttackSimulator:
                 }
             )
 
-        attack_success = (
-            bool(self.turns)
-            and blocked_turns == 0
-            and "benign" not in scenario_name.lower()
-        )
         total_turns = len(self.turns)
+        is_benign = "benign" in scenario_name.lower()
+        attack_success = bool(self.turns) and blocked_turns == 0 and not is_benign
+        attack_success_rate_pct = (
+            (total_turns - blocked_turns) / total_turns * 100.0
+            if total_turns and not is_benign
+            else 0.0
+        )
         return {
             "scenario": scenario_name,
             "total_turns": total_turns,
             "blocked_turns": blocked_turns,
             "allowed_turns": total_turns - blocked_turns,
-            "attack_success_rate_pct": (
-                (total_turns - blocked_turns) / total_turns * 100.0
-                if total_turns
-                else 0.0
-            ),
+            "attack_success_rate_pct": attack_success_rate_pct,
             "attack_success": attack_success,
             "drift_detected": blocked_turns > 0,
             "trace_root": self._trace_root(),

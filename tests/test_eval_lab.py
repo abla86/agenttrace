@@ -1,4 +1,4 @@
-﻿import unittest
+import unittest
 
 from agenttrace.evaluation.lab import (
     ActionCapability,
@@ -11,7 +11,6 @@ from agenttrace.evaluation.lab import (
 
 
 class TestAgentEvaluationLab(unittest.TestCase):
-
     def test_merkle_root_changes_when_leaf_changes(self):
         root_a = merkle_root(["a", "b", "c"])
         root_b = merkle_root(["a", "X", "c"])
@@ -39,8 +38,9 @@ class TestAgentEvaluationLab(unittest.TestCase):
             ],
         )
 
-        self.assertEqual(result.blocked_steps, 0)
-        self.assertFalse(result.attack_success)
+        self.assertEqual(result["blocked_turns"], 0)
+        self.assertFalse(result["attack_success"])
+        self.assertEqual(result["attack_success_rate_pct"], 0.0)
 
     def test_untrusted_rag_write_blocked(self):
         sim = MultiTurnAttackSimulator()
@@ -57,8 +57,8 @@ class TestAgentEvaluationLab(unittest.TestCase):
             ],
         )
 
-        self.assertEqual(result.blocked_steps, 1)
-        self.assertFalse(result.attack_success)
+        self.assertEqual(result["blocked_turns"], 1)
+        self.assertFalse(result["attack_success"])
 
     def test_secret_network_flow_blocked(self):
         sim = MultiTurnAttackSimulator()
@@ -75,8 +75,8 @@ class TestAgentEvaluationLab(unittest.TestCase):
             ],
         )
 
-        self.assertEqual(result.blocked_steps, 1)
-        self.assertFalse(result.attack_success)
+        self.assertEqual(result["blocked_turns"], 1)
+        self.assertFalse(result["attack_success"])
 
     def test_phase_escalation_blocked(self):
         sim = MultiTurnAttackSimulator()
@@ -93,7 +93,7 @@ class TestAgentEvaluationLab(unittest.TestCase):
             ],
         )
 
-        self.assertEqual(result.blocked_steps, 1)
+        self.assertEqual(result["blocked_turns"], 1)
 
     def test_tool_manifest_drift_detected(self):
         registry = ToolManifestRegistry()
@@ -149,7 +149,7 @@ class TestAgentEvaluationLab(unittest.TestCase):
             ],
         )
 
-        original_root = result.trace_root
+        original_root = result["trace_root"]
 
         sim.nodes["N_1"] = type(sim.nodes["N_1"])(
             node_id="N_1",

@@ -1,1 +1,1 @@
-﻿
+"""Runtime components for AgentTrace."""

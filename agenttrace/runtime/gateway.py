@@ -91,9 +91,7 @@ def _parse_manifest(body: dict[str, Any]) -> ToolManifest:
     return ToolManifest(
         name=str(body["name"]),
         schema=dict(body.get("schema", {})),
-        capabilities=tuple(
-            ActionCapability(value) for value in body.get("capabilities", [])
-        ),
+        capabilities=tuple(ActionCapability(value) for value in body.get("capabilities", [])),
         version=str(body.get("version", "1")),
     )
 
@@ -103,9 +101,7 @@ async def register_tool(request):
         body = await request.json()
         manifest = _parse_manifest(body)
         fingerprint = registry.register(manifest)
-        return JSONResponse(
-            {"registered": True, "tool": manifest.name, "fingerprint": fingerprint}
-        )
+        return JSONResponse({"registered": True, "tool": manifest.name, "fingerprint": fingerprint})
     except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
         return JSONResponse({"error": str(exc)}, status_code=400)
 
@@ -129,8 +125,7 @@ async def intercept_tool_call(request):
                 name=str(tool_name),
                 schema=dict(body.get("schema", {})),
                 capabilities=tuple(
-                    ActionCapability(value)
-                    for value in body.get("capabilities", [action.value])
+                    ActionCapability(value) for value in body.get("capabilities", [action.value])
                 ),
                 version=str(body.get("version", "1")),
             )

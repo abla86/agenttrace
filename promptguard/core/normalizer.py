@@ -1,15 +1,37 @@
-﻿import base64
+import base64
 import binascii
 import re
+from typing import ClassVar
 
 
 class AdvancedNormalizer:
-    HOMOGLYPH_MAP = {
-        'а': 'a', 'с': 'c', 'е': 'e', 'о': 'o', 'р': 'p', 'ѕ': 's', 'х': 'x', 'у': 'y',
-        'А': 'A', 'В': 'B', 'С': 'C', 'Е': 'E', 'Н': 'H', 'І': 'I', 'Ј': 'J', 'К': 'K',
-        'М': 'M', 'О': 'O', 'Р': 'P', 'Ѕ': 'S', 'Т': 'T', 'Х': 'X', 'Ү': 'Y', 'һ': 'h'
+    HOMOGLYPH_MAP: ClassVar[dict[str, str]] = {
+        "а": "a",
+        "с": "c",
+        "е": "e",
+        "о": "o",
+        "р": "p",
+        "ѕ": "s",
+        "х": "x",
+        "у": "y",
+        "А": "A",
+        "В": "B",
+        "С": "C",
+        "Е": "E",
+        "Н": "H",
+        "І": "I",
+        "Ј": "J",
+        "К": "K",
+        "М": "M",
+        "О": "O",
+        "Р": "P",
+        "Ѕ": "S",
+        "Т": "T",
+        "Х": "X",
+        "Ү": "Y",
+        "һ": "h",
     }
-    EVIL_UNICODE = re.compile(r"[\u200B-\u200F\uFEFF\u00AD\u2060-\u206F\u202A-\u202E\u180E]")
+    EVIL_UNICODE: ClassVar[re.Pattern[str]] = re.compile(r"[\u200B-\u200F\uFEFF\u00AD\u2060-\u206F\u202A-\u202E\u180E]")
 
     @classmethod
     def clean(cls, text: str) -> tuple[str, bool, bool]:

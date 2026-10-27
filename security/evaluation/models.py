@@ -39,8 +39,7 @@ class TraceNode:
     @property
     def node_hash(self) -> str:
         canonical = (
-            f"{self.node_id}|{self.taint.value}|{self.content}|"
-            f"{','.join(sorted(self.parent_ids))}"
+            f"{self.node_id}|{self.taint.value}|{self.content}|{','.join(sorted(self.parent_ids))}"
         )
         return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 

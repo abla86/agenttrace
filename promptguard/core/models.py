@@ -1,4 +1,4 @@
-﻿from dataclasses import dataclass, field
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
@@ -8,6 +8,7 @@ class TrustLevel(Enum):
     AUTHENTICATED_USER = 1
     UNTRUSTED_EXTERNAL = 2
 
+
 class ThreatCategory(Enum):
     HOMOGLYPH_OBFUSCATION = "HOMOGLYPH_OBFUSCATION"
     INDIRECT_ROLE_HIJACK = "INDIRECT_ROLE_HIJACK"
@@ -16,10 +17,12 @@ class ThreatCategory(Enum):
     SEMANTIC_JAILBREAK = "SEMANTIC_JAILBREAK"
     UNSAFE_CODE_EXECUTION = "UNSAFE_CODE_EXECUTION"
 
+
 class EnforcementAction(Enum):
     ALLOW = "ALLOW"
     SANITIZE_AND_WRAP = "SANITIZE_AND_WRAP"
     BLOCK = "BLOCK"
+
 
 @dataclass(frozen=True)
 class SecurityViolation:
@@ -28,6 +31,7 @@ class SecurityViolation:
     risk_score: float
     description: str
     extracted_sample: str
+
 
 @dataclass
 class TaintReport:
@@ -38,6 +42,7 @@ class TaintReport:
     max_risk: float
     trust_level: TrustLevel
     violations: list[SecurityViolation] = field(default_factory=list)
+
 
 @dataclass
 class ToolCallEvaluation:
