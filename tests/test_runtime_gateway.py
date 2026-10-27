@@ -38,6 +38,16 @@ class TestRuntimeGateway(unittest.TestCase):
         self.assertEqual(data["decision"], "BLOCK")
 
     def test_audit_log_endpoint(self):
+        self.client.post(
+            "/v1/gateway/intercept",
+            json={
+                "node_id": "test_audit_entry",
+                "taint": "USER_INTENT",
+                "phase": "EXECUTION",
+                "action": "READ",
+                "content": "Create an auditable test event",
+            },
+        )
         res = self.client.get("/v1/gateway/audit")
         self.assertEqual(res.status_code, 200)
         data = res.json()
