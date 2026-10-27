@@ -38,8 +38,8 @@ class TestAgentEvaluationLab(unittest.TestCase):
             ],
         )
 
-        self.assertEqual(result.blocked_steps, 0)
-        self.assertFalse(result.attack_success)
+        self.assertEqual(result["blocked_turns"], 0)
+        self.assertFalse(result["attack_success"])
 
     def test_untrusted_rag_write_blocked(self):
         sim = MultiTurnAttackSimulator()
@@ -148,7 +148,7 @@ class TestAgentEvaluationLab(unittest.TestCase):
             ],
         )
 
-        original_root = result.trace_root
+        original_root = result["trace_root"]
 
         sim.nodes["N_1"] = type(sim.nodes["N_1"])(
             node_id="N_1",
