@@ -40,6 +40,7 @@ class TestAgentEvaluationLab(unittest.TestCase):
 
         self.assertEqual(result["blocked_turns"], 0)
         self.assertFalse(result["attack_success"])
+        self.assertEqual(result["attack_success_rate_pct"], 0.0)
 
     def test_untrusted_rag_write_blocked(self):
         sim = MultiTurnAttackSimulator()
